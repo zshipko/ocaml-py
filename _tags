@@ -1,0 +1,5 @@
+true: bin_annot, safe_string, package(bytes ctypes.foreign)
+
+"src": include
+"test": include
+
