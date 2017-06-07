@@ -18,36 +18,52 @@ module type Version = sig
 end
 
 exception Invalid_type
+exception Invalid_object
 
 module Make(V : Version) : sig
-    type t
-
-    val to_pyobject : t -> pyobject
-    val from_pyobject : pyobject -> t
-
     module C : sig
         val from : Dl.library
     end
 
-    module Dict : sig
-        val create : unit -> t
+    module Object : sig
+        type t
+        val to_pyobject : t -> pyobject
+        val from_pyobject : pyobject -> t
+        val incref : t -> unit
+        val decref : t -> unit
+        val length : t -> int64
+        val unwrap : t option -> t
+
+        val call : ?args:t -> ?kwargs:t -> t -> t
+        val get_item : t -> t -> t
+        val del_item : t -> t -> unit
+        val set_item : t -> t -> t -> unit
+
+        val to_string : t -> string
+        val from_string : string -> t
+        val to_int : t -> int
+        val from_int : int -> t
     end
 
-    val main : unit -> t
-    val incref : t -> unit
-    val decref : t -> unit
+    module Dict : sig
+        val create : unit -> Object.t
+    end
+
+    module Tuple : sig
+        val create : int -> Object.t
+    end
+
+    module Module : sig
+        val get : string -> Object.t
+        val main : unit -> Object.t
+        val main_dict : unit -> Object.t
+    end
 
     val initialize : ?initsigs:bool -> unit -> unit
     val finalize : unit -> unit
 
     val eval : string -> bool
-    val run : ?globals:t -> ?locals:t -> string -> t option
-
-    val to_string : t -> string
-    val from_string : string -> t
-
-    val to_int : t -> int
-    val from_int : int -> t
+    val run : ?globals:Object.t -> ?locals:Object.t -> string -> Object.t
 end
 
 (*---------------------------------------------------------------------------
