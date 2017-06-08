@@ -25,6 +25,8 @@ module Make(V : Version) : sig
         val from : Dl.library
     end
 
+    val wrap : pyobject -> t
+
     module Object : sig
         type t
         val to_pyobject : t -> pyobject
