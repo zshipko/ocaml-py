@@ -260,6 +260,9 @@ module Make(V : Version) = struct
 
     let (!$) obj = to_object obj
 
+    let (@) fn args =
+        call ~args:!$(Tuple (Array.of_list args)) fn
+
     let () = initialize ()
 end
 

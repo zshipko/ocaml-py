@@ -2,7 +2,7 @@ py — OCaml interface to Python
 -------------------------------------------------------------------------------
 %%VERSION%%
 
-py is a lightweight interface for executing Python3 in OCaml using ctypes
+py is a ctypes interface to Python 3 for OCaml
 
 py is distributed under the ISC license.
 

@@ -93,6 +93,7 @@ module Make(V : Version) : sig
     val call : ?args:Object.t -> ?kwargs:Object.t -> Object.t -> Object.t
 
     val (!$) : t -> Object.t
+    val (@) : Object.t -> t list -> Object.t
 end
 
 (*---------------------------------------------------------------------------
