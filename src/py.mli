@@ -80,9 +80,8 @@ module Make(V : Version) : sig
     end
 
     type t =
-        | Object of Object.t
-        | Module of Object.t
-        | Null
+        | PyObject of Object.t
+        | PyNone
         | Bool of bool
         | Int of int
         | Int64 of int64

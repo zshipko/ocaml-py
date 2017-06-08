@@ -123,9 +123,8 @@ module Make(V : Version) = struct
     end
 
     type t =
-        | Object of Object.t
-        | Module of Object.t
-        | Null
+        | PyObject of Object.t
+        | PyNone
         | Bool of bool
         | Int of int
         | Int64 of int64
@@ -138,8 +137,8 @@ module Make(V : Version) = struct
         | Set of t list
 
     let rec to_object = function
-        | Object o | Module o -> o
-        | Null -> Object.none
+        | PyObject o -> o
+        | PyNone -> Object.none
         | Bool b -> Object.from_bool b
         | Int i -> Object.from_int i
         | Int64 i -> Object.from_int64 i
