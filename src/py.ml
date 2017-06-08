@@ -16,8 +16,15 @@ module Make(V : Version) = struct
         (** PyObject handle *)
         type t = pyobject
 
-        let to_pyobject (x : t) : pyobject = x
-        let from_pyobject (x : pyobject) : t = x
+        let to_pyobject (x : t) : pyobject =
+            if x = null then raise Invalid_object
+            else x
+
+        let from_pyobject (x : pyobject) : t =
+            if x = null then raise Invalid_object
+            else x
+
+        let is_null x = x = null
 
         let decref = C._Py_DecRef
         let incref = C._Py_IncRef
@@ -105,6 +112,14 @@ module Make(V : Version) = struct
 
         let from_bool b =
             wrap (C._PyBool_FromLong (if b then 1 else 0))
+
+        let none = C._Py_NoneStruct
+
+        let compare a b op =
+            C._PyObject_RichCompareBool a b (Obj.magic op : int)
+
+        let is_none x = compare x none EQ
+
     end
 
     type t =
@@ -124,7 +139,7 @@ module Make(V : Version) = struct
 
     let rec to_object = function
         | Object o | Module o -> o
-        | Null -> null (* TODO: check to make sure this is okay *)
+        | Null -> Object.none
         | Bool b -> Object.from_bool b
         | Int i -> Object.from_int i
         | Int64 i -> Object.from_int64 i
@@ -191,8 +206,6 @@ module Make(V : Version) = struct
         | Some k -> k
         | None -> null in
         C._PyObject_Call fn args kw
-
-
 
     let (!$) obj = to_object obj
 

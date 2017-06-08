@@ -17,6 +17,14 @@ module type Version = sig
     val lib : string
 end
 
+type op =
+    | LT
+    | LE
+    | EQ
+    | NE
+    | GT
+    | GE
+
 exception Invalid_type
 exception Invalid_object
 
@@ -29,6 +37,8 @@ module Make(V : Version) : sig
         type t
         val to_pyobject : t -> pyobject
         val from_pyobject : pyobject -> t
+        val is_null : t -> bool
+        val is_none : t -> bool
         val incref : t -> unit
         val decref : t -> unit
         val length : t -> int64
@@ -56,6 +66,8 @@ module Make(V : Version) : sig
         val from_float : float -> t
         val to_bool : t -> bool
         val from_bool : bool -> t
+        val none : t
+        val compare : t -> t -> op -> bool
     end
 
     val wrap : pyobject -> Object.t

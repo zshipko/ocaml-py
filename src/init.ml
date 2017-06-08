@@ -4,6 +4,14 @@ open Foreign
 type pyobject = unit ptr
 let pyobject : pyobject typ = ptr void
 
+type op =
+    | LT
+    | LE
+    | EQ
+    | NE
+    | GT
+    | GE
+
 module type Version = sig
     val lib : string
 end
@@ -29,6 +37,8 @@ module Init(V : Version) = struct
         with _ ->
             Dl.(dlopen ~filename:(V.lib) ~flags)
 
+    let _Py_NoneStruct = foreign_value ~from "_Py_NoneStruct" void
+    let _PyObject_RichCompareBool = foreign ~from "PyObject_RichCompareBool" (pyobject @-> pyobject @-> int @-> returning bool)
     let _PyMem_RawFree = foreign ~from "PyMem_RawFree" (ptr void @-> returning void)
     let _Py_DecodeLocale = foreign ~from "Py_DecodeLocale" (string @-> ptr void @-> returning wchar_string)
     let _Py_SetProgramName = foreign ~from "Py_SetProgramName" (wchar_string @-> returning void)
@@ -41,8 +51,8 @@ module Init(V : Version) = struct
     let _PyObject_GetItem = foreign ~from "PyObject_GetItem" (pyobject @-> pyobject @-> returning pyobject)
     let _PyObject_DelItem = foreign ~from "PyObject_DelItem" (pyobject @-> pyobject @-> returning int)
     let _PyObject_SetItem = foreign ~from "PyObject_SetItem" (pyobject @-> pyobject @-> pyobject @-> returning int)
-    let _PyObject_GetAttr = foreign ~from "PyObject_GetAttr" (pyobject @-> pyobject @-> returning pyobject)
-    let _PyObject_SetAttr = foreign ~from "PyObject_SetAttr" (pyobject @-> pyobject @-> pyobject @-> returning int)
+    let _PyObject_GetAttr = foreign ~from "PyObject_GenericGetAttr" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyObject_SetAttr = foreign ~from "PyObject_GenericSetAttr" (pyobject @-> pyobject @-> pyobject @-> returning int)
     let _PyObject_HasAttr = foreign ~from "PyObject_HasAttr" (pyobject @-> pyobject @-> returning bool)
 
     (* Unicode *)
