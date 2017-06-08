@@ -110,7 +110,7 @@ module Make(V : Version) = struct
     type t =
         | Object of Object.t
         | Module of Object.t
-        | None
+        | Null
         | Bool of bool
         | Int of int
         | Int64 of int64
@@ -124,7 +124,7 @@ module Make(V : Version) = struct
 
     let rec to_object = function
         | Object o | Module o -> o
-        | None -> null (* TODO: check to make sure this is okay *)
+        | Null -> null (* TODO: check to make sure this is okay *)
         | Bool b -> Object.from_bool b
         | Int i -> Object.from_int i
         | Int64 i -> Object.from_int64 i
@@ -136,11 +136,25 @@ module Make(V : Version) = struct
         | Dict d -> Object.create_dict (List.map (fun (k, v) -> to_object k, to_object v) d)
         | Set l -> Object.create_set (Object.create_list (List.map to_object l))
 
+    let initialized = ref false
+    let program_name : wchar_string option ref = ref None
+
+    let finalize () =
+        match !program_name with
+        | Some p -> C._PyMem_RawFree p
+        | None -> ();
+        C._Py_Finalize ()
+
     (** Initialize the Python interpreter *)
     let initialize ?initsigs:(initsigs=true) () =
-        C._Py_InitializeEx (if initsigs then 1 else 0)
-
-    let finalize = C._Py_Finalize
+        if not !initialized then
+            let name = C._Py_DecodeLocale Sys.argv.(0) null in
+            let _ = if name <> null then
+                let _ = program_name := Some name in
+                C._Py_SetProgramName name in
+            let _ = C._Py_InitializeEx (if initsigs then 1 else 0) in
+            initialized := true;
+            at_exit finalize
 
     (** Returns the main module *)
     module Module = struct
@@ -149,6 +163,12 @@ module Make(V : Version) = struct
 
         let get_dict name =
             wrap (C._PyModule_GetDict (get name))
+
+        let import name =
+            wrap (C._PyImport_Import (Object.from_string name))
+
+        let reload m =
+            wrap (C._PyImport_ReloadModule m)
     end
 
     (** Execute a string in the global context returning false if an error occurs *)

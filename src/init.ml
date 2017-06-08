@@ -8,6 +8,9 @@ module type Version = sig
     val lib : string
 end
 
+type wchar_string = unit ptr
+let wchar_string : wchar_string typ = ptr void
+
 module Init(V : Version) = struct
     let from =
         (* Try to open a bunch of different permutations to find the correct library
@@ -25,6 +28,10 @@ module Init(V : Version) = struct
             Dl.(dlopen ~filename:("lib" ^ V.lib) ~flags)
         with _ ->
             Dl.(dlopen ~filename:(V.lib) ~flags)
+
+    let _PyMem_RawFree = foreign ~from "PyMem_RawFree" (ptr void @-> returning void)
+    let _Py_DecodeLocale = foreign ~from "Py_DecodeLocale" (string @-> ptr void @-> returning wchar_string)
+    let _Py_SetProgramName = foreign ~from "Py_SetProgramName" (wchar_string @-> returning void)
 
     (* Object *)
     let _PyObject_Str = foreign ~from "PyObject_Str" (pyobject @-> returning pyobject)
@@ -53,8 +60,8 @@ module Init(V : Version) = struct
     let _PyLong_FromLongLong = foreign ~from "PyLong_FromLongLong" (int64_t @-> returning pyobject)
 
     (* Float *)
-    let _PyFloat_AsDouble = foreign ~from "PyFloat_AsDouble" (pyobject @-> returning float)
-    let _PyFloat_FromDouble = foreign ~from "PyFloat_FromDouble" (float @-> returning pyobject)
+    let _PyFloat_AsDouble = foreign ~from "PyFloat_AsDouble" (pyobject @-> returning double)
+    let _PyFloat_FromDouble = foreign ~from "PyFloat_FromDouble" (double @-> returning pyobject)
 
     (* Bool *)
     let _PyObject_IsTrue = foreign ~from "PyObject_IsTrue" (pyobject @-> returning int)
@@ -71,6 +78,8 @@ module Init(V : Version) = struct
     (* Module *)
     let _PyModule_GetDict = foreign ~from "PyModule_GetDict" (pyobject @-> returning pyobject)
     let _PyImport_AddModule = foreign ~from "PyImport_AddModule" (string @-> returning pyobject)
+    let _PyImport_Import = foreign ~from "PyImport_Import" (pyobject @-> returning pyobject)
+    let _PyImport_ReloadModule = foreign ~from "PyImport_ReloadModule" (pyobject @-> returning pyobject)
 
     (* Dict *)
     let _PyDict_New = foreign ~from "PyDict_New" (void @-> returning pyobject)

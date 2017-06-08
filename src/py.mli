@@ -25,8 +25,6 @@ module Make(V : Version) : sig
         val from : Dl.library
     end
 
-    val wrap : pyobject -> t
-
     module Object : sig
         type t
         val to_pyobject : t -> pyobject
@@ -60,15 +58,19 @@ module Make(V : Version) : sig
         val from_bool : bool -> t
     end
 
+    val wrap : pyobject -> Object.t
+
     module Module : sig
         val get : string -> Object.t
         val get_dict : string -> Object.t
+        val import : string -> Object.t
+        val reload : Object.t -> Object.t
     end
 
     type t =
         | Object of Object.t
         | Module of Object.t
-        | None
+        | Null
         | Bool of bool
         | Int of int
         | Int64 of int64
