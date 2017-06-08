@@ -96,6 +96,8 @@ module Make(V : Version) : sig
     (** Call a Python Object *)
     val call : ?args:Object.t -> ?kwargs:Object.t -> Object.t -> Object.t
 
+    val run : Object.t -> ?kwargs:Object.t -> t list -> Object.t
+
     val (!$) : t -> Object.t
     val (@) : Object.t -> t list -> Object.t
 end

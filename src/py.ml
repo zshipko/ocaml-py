@@ -192,10 +192,14 @@ module Make(V : Version) = struct
         | None -> null in
         C._PyObject_Call fn args kw
 
+
+
     let (!$) obj = to_object obj
 
-    let (@) fn args =
-        call ~args:!$(Tuple (Array.of_list args)) fn
+    let run fn ?kwargs args =
+        call ~args:!$(Tuple (Array.of_list args)) ?kwargs fn
+
+    let (@) fn args = run fn args
 
     let () = initialize ()
 end
