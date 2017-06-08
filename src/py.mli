@@ -32,38 +32,67 @@ module Make(V : Version) : sig
         val incref : t -> unit
         val decref : t -> unit
         val length : t -> int64
-        val unwrap : t option -> t
+        val create_dict : (t * t) list -> t
+        val create_tuple : t array -> t
+        val create_list : t list -> t
+        val create_set : t -> t
 
-        val call : ?args:t -> ?kwargs:t -> t -> t
         val get_item : t -> t -> t
         val del_item : t -> t -> unit
         val set_item : t -> t -> t -> unit
+        val get_attr : t -> t -> t
+        val del_attr : t -> t -> unit
+        val set_attr : t -> t -> t -> unit
 
         val to_string : t -> string
         val from_string : string -> t
+        val to_bytes : t -> bytes
+        val from_bytes : bytes -> t
         val to_int : t -> int
         val from_int : int -> t
-    end
-
-    module Dict : sig
-        val create : unit -> Object.t
-    end
-
-    module Tuple : sig
-        val create : int -> Object.t
+        val to_int64 : t -> int64
+        val from_int64 : int64 -> t
+        val to_float : t -> float
+        val from_float : float -> t
+        val to_bool : t -> bool
+        val from_bool : bool -> t
     end
 
     module Module : sig
         val get : string -> Object.t
-        val main : unit -> Object.t
-        val main_dict : unit -> Object.t
+        val get_dict : string -> Object.t
     end
+
+    type t =
+        | Object of Object.t
+        | Module of Object.t
+        | None
+        | Bool of bool
+        | Int of int
+        | Int64 of int64
+        | Float of float
+        | String of string
+        | Bytes of Bytes.t
+        | List of t list
+        | Tuple of t array
+        | Dict of (t * t) list
+        | Set of t list
+
+    val to_object : t -> Object.t
 
     val initialize : ?initsigs:bool -> unit -> unit
     val finalize : unit -> unit
 
-    val eval : string -> bool
-    val run : ?globals:Object.t -> ?locals:Object.t -> string -> Object.t
+    (** Execute a string for side-effects only *)
+    val exec : string -> bool
+
+    (** Evaluate a string and return the response *)
+    val eval : ?globals:Object.t -> ?locals:Object.t -> string -> Object.t
+
+    (** Call a Python Object *)
+    val call : ?args:Object.t -> ?kwargs:Object.t -> Object.t -> Object.t
+
+    val (!$) : t -> Object.t
 end
 
 (*---------------------------------------------------------------------------
