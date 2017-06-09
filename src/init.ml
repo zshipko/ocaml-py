@@ -82,13 +82,14 @@ module Init(V : Version) = struct
     let _Py_DecRef = foreign ~from "Py_DecRef" (pyobject @-> returning void)
     let _Py_InitializeEx = foreign ~from "Py_InitializeEx" (int @-> returning void)
     let _Py_Finalize = foreign ~from "Py_Finalize" (void @-> returning void)
+    let _PyEval_InitThreads = foreign ~from "PyEval_InitThreads" (void @-> returning void)
     let _PyRun_SimpleStringFlags = foreign ~from "PyRun_SimpleStringFlags" (string @-> ptr void @-> returning bool)
     let _PyRun_StringFlags = foreign ~from "PyRun_StringFlags" (string @-> int @-> pyobject @-> pyobject @-> ptr void @-> returning pyobject)
 
     (* Module *)
     let _PyModule_GetDict = foreign ~from "PyModule_GetDict" (pyobject @-> returning pyobject)
     let _PyImport_AddModule = foreign ~from "PyImport_AddModule" (string @-> returning pyobject)
-    let _PyImport_Import = foreign ~from "PyImport_Import" (pyobject @-> returning pyobject)
+    let _PyImport_ImportModule = foreign ~from "PyImport_ImportModule" (string @-> returning pyobject)
     let _PyImport_ReloadModule = foreign ~from "PyImport_ReloadModule" (pyobject @-> returning pyobject)
 
     (* Dict *)

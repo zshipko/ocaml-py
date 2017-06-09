@@ -9,7 +9,7 @@ module Make(V : Version) = struct
     module C = Init(V)
 
     let wrap x =
-        if x == null then raise Python_error
+        if x = null then raise Python_error
         else Gc.finalise C._Py_DecRef x; x
 
     module Object = struct
@@ -113,7 +113,8 @@ module Make(V : Version) = struct
         let from_bool b =
             wrap (C._PyBool_FromLong (if b then 1 else 0))
 
-        let none = incref C._Py_NoneStruct; C._Py_NoneStruct
+        let none = C._Py_NoneStruct
+        let incref_none () = incref none; none
 
         let compare a b op =
             C._PyObject_RichCompareBool a b (Obj.magic op : int)
@@ -174,9 +175,12 @@ module Make(V : Version) = struct
 
     let finalize () =
         match !program_name with
-        | Some p -> C._PyMem_RawFree p
+        | Some p ->
+            C._PyMem_RawFree p;
+            program_name := None
         | None -> ();
-        C._Py_Finalize ()
+        C._Py_Finalize ();
+        initialized := false
 
     (** Initialize the Python interpreter *)
     let initialize ?initsigs:(initsigs=true) () =
@@ -186,6 +190,7 @@ module Make(V : Version) = struct
                 let _ = program_name := Some name in
                 C._Py_SetProgramName name in
             let _ = C._Py_InitializeEx (if initsigs then 1 else 0) in
+            let _ = C._PyEval_InitThreads () in
             initialized := true;
             at_exit finalize
 
@@ -196,9 +201,6 @@ module Make(V : Version) = struct
 
         let get_dict name =
             wrap (C._PyModule_GetDict (get name))
-
-        let import name =
-            wrap (C._PyImport_Import (Object.from_string name))
 
         let reload m =
             wrap (C._PyImport_ReloadModule m)
@@ -229,6 +231,8 @@ module Make(V : Version) = struct
 
     let run fn ?kwargs args =
         call ~args:!$(Tuple (Array.of_list args)) ?kwargs fn
+
+    let import name = exec ("import " ^ name)
 
     let (@) fn args = run fn args
 

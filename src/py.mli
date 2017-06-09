@@ -67,6 +67,7 @@ module Make(V : Version) : sig
         val to_bool : t -> bool
         val from_bool : bool -> t
         val none : t
+        val incref_none : unit -> t
         val compare : t -> t -> op -> bool
 
         val array : t -> t array
@@ -82,7 +83,6 @@ module Make(V : Version) : sig
     module Module : sig
         val get : string -> Object.t
         val get_dict : string -> Object.t
-        val import : string -> Object.t
         val reload : Object.t -> Object.t
     end
 
@@ -115,6 +115,7 @@ module Make(V : Version) : sig
     val call : ?args:Object.t -> ?kwargs:Object.t -> Object.t -> Object.t
 
     val run : Object.t -> ?kwargs:Object.t -> t list -> Object.t
+    val import : string -> bool
 
     val (!$) : t -> Object.t
     val (@) : Object.t -> t list -> Object.t
