@@ -1,21 +1,44 @@
-(*---------------------------------------------------------------------------
-   Copyright (c) 2017 Zach Shipko. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
-   %%NAME%% %%VERSION%%
-  ---------------------------------------------------------------------------*)
+type counter = {
+    mutable pass: int;
+    mutable fail: int;
+}
 
-(*---------------------------------------------------------------------------
-   Copyright (c) 2017 Zach Shipko
+let start () = {
+    pass = 0;
+    fail = 0;
+}
 
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
+let red s =
+    "\027[0;31m" ^ s ^ "\027[0m"
 
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)
+let green s =
+    "\027[0;32m" ^ s ^ "\027[0m"
+
+let check counter name v x =
+    let _ = Printf.printf "Running %s ..... " name in
+    try
+        if v () <> x then
+            let _ = counter.fail <- counter.fail + 1 in
+            print_endline (red "FAILED")
+        else let _ = counter.pass <- counter.pass + 1 in
+            print_endline (green "passed")
+    with exc ->
+        let _ = counter.fail <- counter.fail + 1 in
+        Printf.printf "\027[0;31mFAILED\027[0m  with error:\n\t%s\n" (Printexc.to_string exc)
+
+let check_raise counter name v =
+    let _ = Printf.printf "Running %s ..... " name in
+    try
+        let _ = v () in
+        let _ = counter.fail <- counter.fail + 1 in
+        print_endline (red "FAILED")
+    with _ ->
+        let _ = counter.pass <- counter.pass + 1 in
+        print_endline (green "passed")
+
+let all t l =
+    List.iter (fun fn -> fn t) l
+
+let finish counter =
+    Printf.printf "\nTotal: %d\n\nPassed: %d\nFailed: %d\n" (counter.pass + counter.fail) counter.pass counter.fail;
+    exit counter.fail

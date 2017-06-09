@@ -93,6 +93,9 @@ module Init(V : Version) = struct
 
     (* Dict *)
     let _PyDict_New = foreign ~from "PyDict_New" (void @-> returning pyobject)
+    let _PyDict_Items = foreign ~from "PyDict_Items" (pyobject @-> returning pyobject)
+    let _PyDict_Values = foreign ~from "PyDict_Values" (pyobject @-> returning pyobject)
+    let _PyDict_Keys = foreign ~from "PyDict_Keys" (pyobject @-> returning pyobject)
 
     (* Tuple *)
     let _PyTuple_New = foreign ~from "PyTuple_New" (int64_t @-> returning pyobject)

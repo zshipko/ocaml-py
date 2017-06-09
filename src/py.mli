@@ -68,6 +68,13 @@ module Make(V : Version) : sig
         val from_bool : bool -> t
         val none : t
         val compare : t -> t -> op -> bool
+
+        val array : t -> t array
+        val list : t -> t list
+        val dict_items : t -> t
+        val dict_keys : t -> t
+        val items : t -> (t * t) list
+        val keys : t -> t list
     end
 
     val wrap : pyobject -> Object.t

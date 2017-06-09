@@ -113,13 +113,32 @@ module Make(V : Version) = struct
         let from_bool b =
             wrap (C._PyBool_FromLong (if b then 1 else 0))
 
-        let none = C._Py_NoneStruct
+        let none = incref C._Py_NoneStruct; C._Py_NoneStruct
 
         let compare a b op =
             C._PyObject_RichCompareBool a b (Obj.magic op : int)
 
         let is_none x = compare x none EQ
 
+        let array x =
+            let len = length x |> Int64.to_int in
+            let arr = Array.make len null in
+            for i = 0 to len - 1 do
+                arr.(i) <- get_item x (from_int i)
+            done;
+            arr
+
+        let list x = array x |> Array.to_list
+        let dict_items x = wrap (C._PyDict_Items x)
+        let dict_keys x = wrap (C._PyDict_Keys x)
+        let items x =
+            let l = list (dict_items x) in
+            List.map (fun i ->
+                match list i with
+                | a::b::_ -> a, b
+                | a::_ -> a, none
+                | _ -> none, none) l
+        let keys x = list (dict_keys x)
     end
 
     type t =
