@@ -23,7 +23,7 @@ module Init(V : Version) = struct
     let from =
         (* Try to open a bunch of different permutations to find the correct library
          * TODO: conside just using the output of pkg-config or something more definitive *)
-        let flags = Dl.[RTLD_LAZY] in
+        let flags = Dl.[RTLD_NOW; RTLD_GLOBAL] in
         try
             Dl.(dlopen ~filename:("lib" ^ V.lib ^ ".so") ~flags)
         with _ -> try

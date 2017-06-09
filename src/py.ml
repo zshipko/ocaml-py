@@ -232,7 +232,7 @@ module Make(V : Version) = struct
     let run fn ?kwargs args =
         call ~args:!$(Tuple (Array.of_list args)) ?kwargs fn
 
-    let import name = exec ("import " ^ name)
+    let import name = wrap (C._PyImport_ImportModule name)
 
     let (@) fn args = run fn args
 

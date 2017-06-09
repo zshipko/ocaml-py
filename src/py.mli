@@ -115,7 +115,7 @@ module Make(V : Version) : sig
     val call : ?args:Object.t -> ?kwargs:Object.t -> Object.t -> Object.t
 
     val run : Object.t -> ?kwargs:Object.t -> t list -> Object.t
-    val import : string -> bool
+    val import : string -> Object.t
 
     val (!$) : t -> Object.t
     val (@) : Object.t -> t list -> Object.t
