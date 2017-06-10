@@ -73,6 +73,7 @@ module Init(V : S.VERSION) = struct
     let _PyEval_InitThreads = foreign ~from "PyEval_InitThreads" (void @-> returning void)
     let _PyRun_SimpleStringFlags = foreign ~from "PyRun_SimpleStringFlags" (string @-> ptr void @-> returning bool)
     let _PyRun_StringFlags = foreign ~from "PyRun_StringFlags" (string @-> int @-> pyobject @-> pyobject @-> ptr void @-> returning pyobject)
+    let _PyErr_Clear = foreign ~from "PyErr_Clear" (void @-> returning void)
 
     (* Module *)
     let _PyModule_GetDict = foreign ~from "PyModule_GetDict" (pyobject @-> returning pyobject)

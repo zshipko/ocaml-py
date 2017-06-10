@@ -20,7 +20,7 @@ module Make(V : S.VERSION) : S.PYTHON = struct
     module C = Init(V)
 
     let wrap x =
-        if x = null then raise Python_error
+        if x = null then let _ = C._PyErr_Clear () in raise Python_error
         else Gc.finalise C._Py_DecRef x; x
 
     module Object = struct
