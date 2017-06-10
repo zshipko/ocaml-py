@@ -121,25 +121,25 @@ module Make(V : Version) = struct
 
         let is_none x = compare x none EQ
 
-        let array x =
+        let id a = a
+
+        let array fn x =
             let len = length x |> Int64.to_int in
             let arr = Array.make len null in
             for i = 0 to len - 1 do
                 arr.(i) <- get_item x (from_int i)
             done;
-            arr
+            Array.map fn arr
 
-        let list x = array x |> Array.to_list
+        let list fn x = array fn x |> Array.to_list
         let dict_items x = wrap (C._PyDict_Items x)
         let dict_keys x = wrap (C._PyDict_Keys x)
-        let items x =
-            let l = list (dict_items x) in
-            List.map (fun i ->
-                match list i with
-                | a::b::_ -> a, b
-                | a::_ -> a, none
-                | _ -> none, none) l
-        let keys x = list (dict_keys x)
+        let dict_values x = wrap (C._PyDict_Values x)
+        let items kf vf x =
+            let keys = list kf (dict_keys x) in
+            let values = list vf (dict_values x) in
+            List.combine keys values
+        let keys fn x = list fn (dict_keys x)
     end
 
     type t =

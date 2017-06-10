@@ -70,12 +70,14 @@ module Make(V : Version) : sig
         val incref_none : unit -> t
         val compare : t -> t -> op -> bool
 
-        val array : t -> t array
-        val list : t -> t list
+        val id : 'a -> 'a
+        val array : (t -> 'a) -> t -> 'a array
+        val list : (t -> 'a) -> t -> 'a list
         val dict_items : t -> t
         val dict_keys : t -> t
-        val items : t -> (t * t) list
-        val keys : t -> t list
+        val dict_values : t -> t
+        val items : (t -> 'a) -> (t -> 'b) -> t -> ('a * 'b) list
+        val keys : (t -> 'a) -> t -> 'a list
     end
 
     val wrap : pyobject -> Object.t

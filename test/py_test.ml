@@ -13,19 +13,15 @@ let py_test_string t =
 
 let py_test_list t =
     let l = !$(List [Int 1; Int 2; Int 3]) in
-    let l' =  Object.list  l in
+    let l' =  Object.list Object.to_int l in
     List.iteri (fun i x ->
-        Test.check t "Python check list" (fun () ->
-            Object.get_item l (Object.from_int i)
-            |> Object.to_int) (i + 1)) l'
+        Test.check t "Python check list" (fun () -> x) (i + 1)) l'
 
 let py_test_tuple t =
     let l = !$(Tuple [| Int 1; Int 2; Int 3 |]) in
-    let l' = Object.list l in
+    let l' = Object.list Object.to_int l in
     List.iteri (fun i x ->
-        Test.check t "Python check tuple" (fun () ->
-            Object.get_item l (Object.from_int i)
-            |> Object.to_int) (i + 1)) l'
+        Test.check t "Python check tuple" (fun () -> x) (i + 1)) l'
 
 let py_test_dict_data = [| "a"; "b"; "c" |]
 
@@ -35,11 +31,13 @@ let py_test_dict t =
         String "b", Int 2;
         String "c", Int 3;
     ]) in
-    let d' = Object.items d in
+    let d' = Object.items Object.to_string Object.to_int d in
     let d' = List.sort (fun (k, v) (k', v') -> compare v v') d' in
     List.iteri (fun i (k, v) ->
-        Test.check t "Python check dict" (fun () ->
-            Object.to_string k, Object.to_int v) (py_test_dict_data.(i), i + 1)) d'
+        Test.check t
+        "Python check dict"
+        (fun () -> k, v)
+        (py_test_dict_data.(i), i + 1)) d'
 
 
 let simple = [
