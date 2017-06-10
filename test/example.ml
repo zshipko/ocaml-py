@@ -3,10 +3,24 @@ module Python = Py.Make(struct
 end)
 
 open Python
-open Ctypes
+
+let numpy = import "numpy"
+let ndarray = Object.get_attr numpy !$(String "ndarray")
+
+(* Create a numpy array *)
+let make_array shape =
+    ndarray $ [List (List.map (fun x -> Int x) shape)]
+
+(* Get the shape of a numpy array *)
+let shape arr =
+    Object.get_attr arr !$(String "shape") |> Object.list Object.to_int
+
 
 let _ =
-    let x = !$(Tuple [| List [Int 1; Int 2; Int 3]; String "abc" |]) in
-    let print = eval "print" in
-    call ~args:x print
+
+    let arr = make_array [100; 100; 3] in
+    let size = shape arr in
+    print_string "Shape: ";
+    List.iter (fun x -> Printf.printf "%d " x) size;
+    print_newline ()
 
