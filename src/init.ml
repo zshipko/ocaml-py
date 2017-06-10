@@ -1,25 +1,13 @@
 open Ctypes
 open Foreign
 
-type pyobject = unit ptr
-let pyobject : pyobject typ = ptr void
-
-type op =
-    | LT
-    | LE
-    | EQ
-    | NE
-    | GT
-    | GE
-
-module type Version = sig
-    val lib : string
-end
+type pyobject = S.pyobject
+let pyobject : pyobject Ctypes.typ = ptr void
 
 type wchar_string = unit ptr
 let wchar_string : wchar_string typ = ptr void
 
-module Init(V : Version) = struct
+module Init(V : S.VERSION) = struct
     let from =
         (* Try to open a bunch of different permutations to find the correct library
          * TODO: conside just using the output of pkg-config or something more definitive *)

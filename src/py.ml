@@ -5,7 +5,18 @@ exception Invalid_type
 exception Invalid_object
 exception Python_error
 
-module Make(V : Version) = struct
+type op = S.op =
+    | LT
+    | LE
+    | EQ
+    | NE
+    | GT
+    | GE
+
+module type PYTHON = S.PYTHON
+module type VERSION = S.VERSION
+
+module Make(V : S.VERSION) : S.PYTHON = struct
     module C = Init(V)
 
     let wrap x =
@@ -234,9 +245,14 @@ module Make(V : Version) = struct
 
     let import name = wrap (C._PyImport_ImportModule name)
 
-    let (@) fn args = run fn args
+    let ($) fn args = run fn args
+
+    let append_path files =
+        let sys = import "sys" in
+        let pathString = !$(String "path") in
+        let path = Object.get_attr sys pathString in
+        let p = Object.list Object.to_string path @ files in
+        Object.set_attr sys pathString (Object.create_list (List.map Object.from_string p))
 
     let () = initialize ()
 end
-
-
