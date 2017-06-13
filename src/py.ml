@@ -223,6 +223,13 @@ module Make(V : S.VERSION) : S.PYTHON = struct
 
     (** Returns the main module *)
     module Module = struct
+        let dict () =
+            C._PyImport_GetModuleDict ()
+
+        let set name m =
+            let d = dict () in
+            Object.set_item d (Object.from_string name) m
+
         let get name =
             wrap (C._PyImport_AddModule name)
 

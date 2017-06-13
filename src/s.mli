@@ -68,6 +68,8 @@ module type PYTHON = sig
     val wrap : pyobject -> Object.t
 
     module Module : sig
+        val dict : unit -> Object.t
+        val set : string -> Object.t -> unit
         val get : string -> Object.t
         val get_dict : string -> Object.t
         val reload : Object.t -> Object.t
