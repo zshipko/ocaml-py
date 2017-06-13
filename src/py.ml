@@ -3,7 +3,7 @@ include Init
 
 exception Invalid_type
 exception Invalid_object
-exception Python_error
+exception Python_error of string
 
 type op = S.op =
     | LT
@@ -19,8 +19,21 @@ module type VERSION = S.VERSION
 module Make(V : S.VERSION) : S.PYTHON = struct
     module C = Init(V)
 
+    let get_python_error () =
+        let ptype, pvalue, ptraceback =
+            allocate_n pyobject ~count:1 ,
+            allocate_n pyobject ~count:1,
+            allocate_n pyobject ~count:1 in
+        let _ = C._PyErr_Fetch ptype pvalue ptraceback in
+        let x = C._PyObject_Str !@pvalue in
+        let res = C._PyUnicode_AsUTF8 x in
+        C._Py_DecRef x;
+        Python_error (res)
+
     let wrap x =
-        if x = null then let _ = C._PyErr_Clear () in raise Python_error
+        if x = null then
+            let err = get_python_error () in
+            let _ = C._PyErr_Clear () in raise err
         else Gc.finalise C._Py_DecRef x; x
 
     module Object = struct
@@ -65,19 +78,19 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             wrap (C._PyObject_GetItem obj k)
 
         let del_item obj k =
-            if C._PyObject_DelItem obj k = (-1) then raise Python_error
+            if C._PyObject_DelItem obj k = (-1) then raise (get_python_error ())
 
         let set_item obj k v =
-            if C._PyObject_SetItem obj k v = (-1) then raise Python_error
+            if C._PyObject_SetItem obj k v = (-1) then raise (get_python_error ())
 
         let get_attr obj k =
             wrap (C._PyObject_GetAttr obj k)
 
         let set_attr obj k v =
-            if C._PyObject_SetAttr obj k v = (-1) then raise Python_error
+            if C._PyObject_SetAttr obj k v = (-1) then raise (get_python_error ())
 
         let del_attr obj k =
-            if C._PyObject_SetAttr obj k null = (-1) then raise Python_error
+            if C._PyObject_SetAttr obj k null = (-1) then raise (get_python_error ())
 
         let has_attr obj k =
             C._PyObject_HasAttr obj k
@@ -202,6 +215,9 @@ module Make(V : S.VERSION) : S.PYTHON = struct
                 C._Py_SetProgramName name in
             let _ = C._Py_InitializeEx (if initsigs then 1 else 0) in
             let _ = C._PyEval_InitThreads () in
+            let argv = allocate_n wchar_string ~count:1 in
+            let _ = argv <-@ name in
+            C._PySys_SetArgvEx 1 argv 1;
             initialized := true;
             at_exit finalize
 
