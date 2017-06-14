@@ -12,7 +12,7 @@ Homepage: https://github.com/zshipko/py
 
 py can be installed with `opam`:
 
-    opam install py
+    opam pin add py https://github.com/zshipko/ocaml-py.git
 
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.
