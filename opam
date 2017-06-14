@@ -1,4 +1,5 @@
 opam-version: "1.2"
+version: "0.1"
 maintainer: "Zach Shipko <zachshipko@gmail.com>"
 authors: ["Zach Shipko <zachshipko@gmail.com>"]
 homepage: "https://github.com/zshipko/py"
@@ -13,6 +14,8 @@ depends:
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "topkg" {build & >= "0.9.0"}
+  "ctypes" {>= "0.12.0"}
+  "ctypes-foreign" {>= "0.4.0"}
 ]
 depopts: []
 build:
