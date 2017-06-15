@@ -20,6 +20,7 @@ module type PYTHON = sig
 
     module Object : sig
         type t
+        type iter
         val to_pyobject : t -> pyobject
         val from_pyobject : pyobject -> t
         val is_null : t -> bool
@@ -63,6 +64,9 @@ module type PYTHON = sig
         val dict_values : t -> t
         val items : (t -> 'a) -> (t -> 'b) -> t -> ('a * 'b) list
         val keys : (t -> 'a) -> t -> 'a list
+
+        val iter : t -> iter
+        val next : iter -> t
     end
 
     val wrap : pyobject -> Object.t

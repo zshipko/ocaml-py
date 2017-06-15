@@ -4,6 +4,9 @@ include Init
 exception Invalid_type
 exception Invalid_object
 exception Python_error of string
+exception End_iteration
+
+let initialized = ref false
 
 type op = S.op =
     | LT
@@ -20,15 +23,17 @@ module Make(V : S.VERSION) : S.PYTHON = struct
     module C = Init(V)
 
     let get_python_error () =
-        let ptype, pvalue, ptraceback =
-            allocate_n pyobject ~count:1 ,
-            allocate_n pyobject ~count:1,
-            allocate_n pyobject ~count:1 in
-        let _ = C._PyErr_Fetch ptype pvalue ptraceback in
-        let x = C._PyObject_Str !@pvalue in
-        let res = C._PyUnicode_AsUTF8 x in
-        C._Py_DecRef x;
-        Python_error (res)
+        if C._PyErr_Occurred () <> 0 then
+            let ptype, pvalue, ptraceback =
+                allocate_n pyobject ~count:1 ,
+                allocate_n pyobject ~count:1,
+                allocate_n pyobject ~count:1 in
+            let _ = C._PyErr_Fetch ptype pvalue ptraceback in
+            let x = C._PyObject_Str !@pvalue in
+            let res = C._PyUnicode_AsUTF8 x in
+            C._Py_DecRef x;
+            Python_error (res)
+        else Invalid_object
 
     let wrap x =
         if x = null then
@@ -36,9 +41,17 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             let _ = C._PyErr_Clear () in raise err
         else Gc.finalise C._Py_DecRef x; x
 
+    let wrap_iter x =
+        let err = C._PyErr_Occurred () = 1 in
+        if x = null && not err then
+            raise End_iteration
+        else
+            wrap x
+
     module Object = struct
         (** PyObject handle *)
         type t = pyobject
+        type iter = t
 
         let to_pyobject (x : t) : pyobject =
             if x = null then raise Invalid_object
@@ -164,6 +177,10 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             let values = list vf (dict_values x) in
             List.combine keys values
         let keys fn x = list fn (dict_keys x)
+
+        let iter x : iter = wrap (C._PyObject_GetIter x)
+        let next x =
+            wrap_iter (C._PyIter_Next x)
     end
 
     type t =
@@ -194,7 +211,6 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         | Dict d -> Object.create_dict (List.map (fun (k, v) -> to_object k, to_object v) d)
         | Set l -> Object.create_set (Object.create_list (List.map to_object l))
 
-    let initialized = ref false
     let program_name : wchar_string option ref = ref None
 
     let finalize () =

@@ -6,7 +6,7 @@ py is a ctypes interface to Python 3 for OCaml
 
 py is distributed under the ISC license.
 
-Homepage: https://github.com/zshipko/py
+Homepage: https://github.com/zshipko/ocaml-py
 
 ## Installation
 

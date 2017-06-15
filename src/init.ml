@@ -32,6 +32,10 @@ module Init(V : S.VERSION) = struct
     let _Py_SetProgramName = foreign ~from "Py_SetProgramName" (wchar_string @-> returning void)
     let _PySys_SetArgvEx = foreign ~from "PySys_SetArgvEx" (int @-> ptr wchar_string @-> int @-> returning void)
 
+    (* Iter *)
+    let _PyObject_GetIter = foreign ~from "PyObject_GetIter" (pyobject @-> returning pyobject)
+    let _PyIter_Next = foreign ~from "PyIter_Next" (pyobject @-> returning pyobject)
+
     (* Object *)
     let _PyObject_Str = foreign ~from "PyObject_Str" (pyobject @-> returning pyobject)
     let _PyObject_Bytes = foreign ~from "PyObject_Bytes" (pyobject @-> returning pyobject)
@@ -76,6 +80,7 @@ module Init(V : S.VERSION) = struct
     let _PyRun_StringFlags = foreign ~from "PyRun_StringFlags" (string @-> int @-> pyobject @-> pyobject @-> ptr void @-> returning pyobject)
     let _PyErr_Clear = foreign ~from "PyErr_Clear" (void @-> returning void)
     let _PyErr_Fetch = foreign ~from "PyErr_Fetch" (ptr pyobject @-> ptr pyobject @-> ptr pyobject @-> returning int)
+    let _PyErr_Occurred = foreign ~from "PyErr_Occurred" (void @-> returning int)
 
     (* Module *)
     let _PyModule_GetDict = foreign ~from "PyModule_GetDict" (pyobject @-> returning pyobject)
