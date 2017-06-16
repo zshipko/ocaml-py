@@ -31,7 +31,7 @@ let py_test_dict t =
         String "b", Int 2;
         String "c", Int 3;
     ]) in
-    let d' = Object.items Object.to_string Object.to_int d in
+    let d' = PyDict.items Object.to_string Object.to_int d in
     let d' = List.sort (fun (k, v) (k', v') -> compare v v') d' in
     List.iteri (fun i (k, v) ->
         Test.check t
@@ -45,14 +45,14 @@ let py_test_iter t =
         Int 2;
         Int 3;
     ]) in
-    let i = Object.iter l in
-    let o = Object.next i in
+    let i = PyIter.get l in
+    let o = PyIter.next i in
     let _ = Test.check t "Python check iter 1" (fun () -> Object.to_int o) 1 in
-    let o = Object.next i in
+    let o = PyIter.next i in
     let _ = Test.check t "Python check iter 2" (fun () -> Object.to_int o) 2 in
-    let o = Object.next i in
+    let o = PyIter.next i in
     let _ = Test.check t "Python check iter 3" (fun () -> Object.to_int o) 3 in
-    Test.check_raise t "Pythn check iter end" (fun () -> Object.next i)
+    Test.check_raise t "Python check iter end" (fun () -> PyIter.next i)
 
 
 let simple = [

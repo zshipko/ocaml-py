@@ -94,6 +94,10 @@ module Init(V : S.VERSION) = struct
     let _PyDict_Items = foreign ~from "PyDict_Items" (pyobject @-> returning pyobject)
     let _PyDict_Values = foreign ~from "PyDict_Values" (pyobject @-> returning pyobject)
     let _PyDict_Keys = foreign ~from "PyDict_Keys" (pyobject @-> returning pyobject)
+    let _PyDict_Contains = foreign ~from "PyDict_Contains" (pyobject @-> pyobject @-> returning int)
+    let _PyDict_Merge = foreign ~from "PyDict_Merge" (pyobject @-> pyobject @-> bool @-> returning int)
+    let _PyDict_Copy = foreign ~from "PyDict_Copy" (pyobject @-> returning pyobject)
+    let _PyDict_Clear = foreign ~from "PyDict_Clear" (pyobject @-> returning void)
 
     (* Tuple *)
     let _PyTuple_New = foreign ~from "PyTuple_New" (int64_t @-> returning pyobject)
@@ -102,7 +106,38 @@ module Init(V : S.VERSION) = struct
     (* List *)
     let _PyList_New = foreign ~from "PyList_New" (int64_t @-> returning pyobject)
     let _PyList_SetItem = foreign ~from "PyList_SetItem" (pyobject @-> int64_t @-> pyobject @-> returning int)
+    let _PyList_Insert = foreign ~from "PyList_Insert" (pyobject @-> int64_t @-> pyobject @-> returning int)
+    let _PyList_Append = foreign ~from "PyList_Append" (pyobject @-> pyobject @-> returning int)
+    let _PyList_GetSlice = foreign ~from "PyList_GetSlice" (pyobject @-> int64_t @-> int64_t @-> returning pyobject)
+    let _PyList_SetSlice = foreign ~from "PyList_SetSlice" (pyobject @-> int64_t @-> int64_t @-> pyobject @-> returning int)
+    let _PyList_Sort = foreign ~from "PyList_Sort" (pyobject @-> returning int)
+    let _PyList_Reverse = foreign ~from "PyList_Reverse" (pyobject @-> returning int)
+    let _PyList_AsTuple = foreign ~from "PyList_AsTuple" (pyobject @-> returning pyobject)
 
     (* Set *)
     let _PySet_New = foreign ~from "PySet_New" (pyobject @-> returning pyobject)
+
+    (* Sequence *)
+    let _PySequence_Concat = foreign ~from "PySequence_Concat" (pyobject @-> pyobject @-> returning pyobject)
+    let _PySequence_InPlaceConcat = foreign ~from "PySequence_InPlaceConcat" (pyobject @-> pyobject @-> returning pyobject)
+    let _PySequence_Contains = foreign ~from "PySequence_Contains" (pyobject @-> pyobject @-> returning int)
+
+    (* Number *)
+    let _PyNumber_Add = foreign ~from "PyNumber_Add" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyNumber_Subtract = foreign ~from "PyNumber_Subtract" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyNumber_Multiply = foreign ~from "PyNumber_Multiply" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyNumber_FloorDivide = foreign ~from "PyNumber_FloorDivide" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyNumber_TrueDivide = foreign ~from "PyNumber_TrueDivide" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyNumber_Remainder = foreign ~from "PyNumber_Remainder" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyNumber_Divmod = foreign ~from "PyNumber_Divmod" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyNumber_Negative = foreign ~from "PyNumber_Negative" (pyobject @-> returning pyobject)
+    let _PyNumber_Positive = foreign ~from "PyNumber_Positive" (pyobject @-> returning pyobject)
+    let _PyNumber_Absolute = foreign ~from "PyNumber_Absolute" (pyobject @-> returning pyobject)
+    let _PyNumber_Invert = foreign ~from "PyNumber_Invert" (pyobject @-> returning pyobject)
+
+
+
+
+
+
 end

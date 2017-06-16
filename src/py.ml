@@ -41,6 +41,13 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             let _ = C._PyErr_Clear () in raise err
         else Gc.finalise C._Py_DecRef x; x
 
+    let wrap_status x =
+        if x = (-1) then
+            let err = get_python_error () in
+            let _ = C._PyErr_Clear () in raise err
+        else ()
+
+
     let wrap_iter x =
         let err = C._PyErr_Occurred () = 1 in
         if x = null && not err then
@@ -51,7 +58,6 @@ module Make(V : S.VERSION) : S.PYTHON = struct
     module Object = struct
         (** PyObject handle *)
         type t = pyobject
-        type iter = t
 
         let to_pyobject (x : t) : pyobject =
             if x = null then raise Invalid_object
@@ -68,24 +74,6 @@ module Make(V : S.VERSION) : S.PYTHON = struct
 
         let length obj =
             C._PyObject_Length obj
-
-        let create_dict l =
-            let d = C._PyDict_New () in
-            List.iter (fun (k, v) ->
-                ignore (C._PyObject_SetItem d k v)) l; wrap d
-
-        let create_tuple l =
-            let tpl = C._PyTuple_New (Array.length l |> Int64.of_int) in
-            Array.iteri (fun i x ->
-                ignore (C._PyTuple_SetItem tpl (Int64.of_int i) x)) l; wrap tpl
-
-        let create_list l =
-            let lst = C._PyList_New (List.length l |> Int64.of_int) in
-            List.iteri (fun i x ->
-                ignore (C._PyList_SetItem lst (Int64.of_int i) x)) l; wrap lst
-
-        let create_set obj =
-            wrap (C._PySet_New obj)
 
         let get_item obj k =
             wrap (C._PyObject_GetItem obj k)
@@ -169,18 +157,137 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             Array.map fn arr
 
         let list fn x = array fn x |> Array.to_list
+
+        let contains x i =
+            let res = C._PySequence_Contains x i in
+            if res < 0 then let () = wrap_status res in false
+            else res = 1
+
+        let concat a b =
+            wrap (C._PySequence_Concat a b)
+
+        let add a b =
+            wrap (C._PyNumber_Add a b)
+
+        let sub a b =
+            wrap (C._PyNumber_Subtract a b)
+
+        let mul a b =
+            wrap (C._PyNumber_Multiply a b)
+
+        let div a b =
+            wrap (C._PyNumber_TrueDivide a b)
+
+        let floor_div a b =
+            wrap (C._PyNumber_FloorDivide a b)
+
+        let divmod a b =
+            wrap (C._PyNumber_Divmod a b)
+
+        let rem a b =
+            wrap (C._PyNumber_Remainder a b)
+
+        let neg a =
+            wrap (C._PyNumber_Negative a)
+
+        let pos a =
+            wrap (C._PyNumber_Positive a)
+
+        let abs a =
+            wrap (C._PyNumber_Absolute a)
+
+        let invert a =
+            wrap (C._PyNumber_Invert a)
+
+
+
+    end
+
+    module PyIter = struct
+        type t = pyobject
+
+        let get x : t = wrap (C._PyObject_GetIter x)
+
+        let next x =
+            wrap_iter (C._PyIter_Next x)
+    end
+
+    module PyDict = struct
+        let create l =
+            let d = C._PyDict_New () in
+            List.iter (fun (k, v) ->
+                wrap_status (C._PyObject_SetItem d k v)) l; wrap d
+
+        let contains d k =
+            C._PyDict_Contains d k = 1
+
+        let copy d =
+            wrap (C._PyDict_Copy d)
+
+        let clear d =
+            C._PyDict_Clear d
+
+        let merge a b update =
+            wrap_status (C._PyDict_Merge a b update)
+
         let dict_items x = wrap (C._PyDict_Items x)
         let dict_keys x = wrap (C._PyDict_Keys x)
         let dict_values x = wrap (C._PyDict_Values x)
-        let items kf vf x =
-            let keys = list kf (dict_keys x) in
-            let values = list vf (dict_values x) in
-            List.combine keys values
-        let keys fn x = list fn (dict_keys x)
 
-        let iter x : iter = wrap (C._PyObject_GetIter x)
-        let next x =
-            wrap_iter (C._PyIter_Next x)
+        let items kf vf x =
+            let keys = Object.list kf (dict_keys x) in
+            let values = Object.list vf (dict_values x) in
+            List.combine keys values
+
+        let keys fn x = Object.list fn (dict_keys x)
+    end
+
+    module PyList = struct
+        let create l =
+            let lst = C._PyList_New (List.length l |> Int64.of_int) in
+            List.iteri (fun i x ->
+                wrap_status (C._PyList_SetItem lst (Int64.of_int i) x)) l; wrap lst
+
+        let insert l i v =
+            wrap_status (C._PyList_Insert l i v)
+
+        let append l v =
+            wrap_status (C._PyList_Append l v)
+
+        let get_slice l s e =
+            wrap (C._PyList_GetSlice l s e)
+
+        let set_slice l s e v =
+            wrap_status (C._PyList_SetSlice l s e v)
+
+        let sort l =
+            wrap_status (C._PyList_Sort l)
+
+        let rev l =
+            wrap_status (C._PyList_Reverse l)
+
+        let tuple l =
+            wrap (C._PyList_AsTuple l)
+    end
+
+    module PyTuple = struct
+        let create l =
+            let tpl = C._PyTuple_New (Array.length l |> Int64.of_int) in
+            Array.iteri (fun i x ->
+                wrap_status (C._PyTuple_SetItem tpl (Int64.of_int i) x)) l; wrap tpl
+    end
+
+    module PySet = struct
+        let create obj =
+            wrap (C._PySet_New obj)
+    end
+
+    module PyUnicode = struct
+        let create = Object.from_string
+    end
+
+    module PyBytes = struct
+        let create = Object.from_bytes
     end
 
     type t =
@@ -204,12 +311,12 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         | Int i -> Object.from_int i
         | Int64 i -> Object.from_int64 i
         | Float f -> Object.from_float f
-        | String s -> Object.from_string s
-        | Bytes b -> Object.from_bytes b
-        | List l -> Object.create_list (List.map to_object l)
-        | Tuple t -> Object.create_tuple (Array.map to_object t)
-        | Dict d -> Object.create_dict (List.map (fun (k, v) -> to_object k, to_object v) d)
-        | Set l -> Object.create_set (Object.create_list (List.map to_object l))
+        | String s -> PyUnicode.create s
+        | Bytes b -> PyBytes.create b
+        | List l -> PyList.create (List.map to_object l)
+        | Tuple t -> PyTuple.create (Array.map to_object t)
+        | Dict d -> PyDict.create (List.map (fun (k, v) -> to_object k, to_object v) d)
+        | Set l -> PySet.create (PyList.create (List.map to_object l))
 
     let program_name : wchar_string option ref = ref None
 
@@ -237,13 +344,13 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             initialized := true;
             at_exit finalize
 
-    (** Returns the main module *)
-    module Module = struct
-        let dict () =
-            C._PyImport_GetModuleDict ()
+    let get_module_dict () =
+        C._PyImport_GetModuleDict ()
 
+    (** Returns the main module *)
+    module PyModule = struct
         let set name m =
-            let d = dict () in
+            let d = get_module_dict () in
             Object.set_item d (Object.from_string name) m
 
         let get name =
@@ -264,14 +371,14 @@ module Make(V : S.VERSION) : S.PYTHON = struct
     let eval ?globals ?locals s =
         let g = match globals with
             | Some x -> x
-            | None -> Module.get_dict "__main__" in
+            | None -> PyModule.get_dict "__main__" in
         let l = match locals with
             | Some x -> x
-            | None -> Object.create_dict [] in
+            | None -> PyDict.create [] in
         wrap (C._PyRun_StringFlags s (258) g l null)
 
     (** Call a Python Object *)
-    let call ?args:(args=Object.create_tuple [||]) ?kwargs fn =
+    let call ?args:(args=PyTuple.create [||]) ?kwargs fn =
         let kw = match kwargs with
         | Some k -> k
         | None -> null in
@@ -291,7 +398,7 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         let pathString = !$(String "path") in
         let path = Object.get_attr sys pathString in
         let p = Object.list Object.to_string path @ files in
-        Object.set_attr sys pathString (Object.create_list (List.map Object.from_string p))
+        Object.set_attr sys pathString (PyList.create (List.map Object.from_string p))
 
     let () = initialize ()
 end

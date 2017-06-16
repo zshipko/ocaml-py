@@ -20,7 +20,6 @@ module type PYTHON = sig
 
     module Object : sig
         type t
-        type iter
         val to_pyobject : t -> pyobject
         val from_pyobject : pyobject -> t
         val is_null : t -> bool
@@ -28,10 +27,6 @@ module type PYTHON = sig
         val incref : t -> unit
         val decref : t -> unit
         val length : t -> int64
-        val create_dict : (t * t) list -> t
-        val create_tuple : t array -> t
-        val create_list : t list -> t
-        val create_set : t -> t
 
         val get_item : t -> t -> t
         val del_item : t -> t -> unit
@@ -59,24 +54,77 @@ module type PYTHON = sig
         val id : 'a -> 'a
         val array : (t -> 'a) -> t -> 'a array
         val list : (t -> 'a) -> t -> 'a list
-        val dict_items : t -> t
-        val dict_keys : t -> t
-        val dict_values : t -> t
-        val items : (t -> 'a) -> (t -> 'b) -> t -> ('a * 'b) list
-        val keys : (t -> 'a) -> t -> 'a list
 
-        val iter : t -> iter
-        val next : iter -> t
+        val contains : t -> t -> bool
+        val concat : t -> t -> t
+        val add : t -> t -> t
+        val sub : t -> t -> t
+        val mul : t -> t -> t
+        val div : t -> t -> t
+        val floor_div : t -> t -> t
+        val rem : t -> t -> t
+        val divmod : t -> t -> t
+        val neg : t -> t
+        val pos : t -> t
+        val abs : t -> t
+        val invert : t -> t
     end
 
     val wrap : pyobject -> Object.t
+    val wrap_status : int -> unit
 
-    module Module : sig
-        val dict : unit -> Object.t
+    module PyIter : sig
+        type t
+        val get : Object.t -> t
+        val next : t -> Object.t
+    end
+
+    module PyDict : sig
+        val create : (Object.t * Object.t) list -> Object.t
+        val dict_items : Object.t -> Object.t
+        val dict_keys : Object.t -> Object.t
+        val dict_values : Object.t -> Object.t
+        val items : (Object.t -> 'a) -> (Object.t -> 'b) -> Object.t -> ('a * 'b) list
+        val keys : (Object.t -> 'a) -> Object.t -> 'a list
+        val contains : Object.t -> Object.t -> bool
+        val copy : Object.t -> Object.t
+        val merge : Object.t -> Object.t -> bool -> unit
+    end
+
+    module PyList : sig
+        val create : Object.t list -> Object.t
+        val insert : Object.t -> int64 -> Object.t -> unit
+        val append : Object.t -> Object.t -> unit
+        val get_slice : Object.t -> int64 -> int64 -> Object.t
+        val set_slice : Object.t -> int64 -> int64 -> Object.t -> unit
+        val sort : Object.t -> unit
+        val rev : Object.t -> unit
+        val tuple : Object.t -> Object.t
+    end
+
+    module PySet : sig
+        val create : Object.t -> Object.t
+    end
+
+    module PyTuple : sig
+        val create : Object.t array -> Object.t
+    end
+
+    val get_module_dict : unit -> Object.t
+
+    module PyModule : sig
         val set : string -> Object.t -> unit
         val get : string -> Object.t
         val get_dict : string -> Object.t
         val reload : Object.t -> Object.t
+    end
+
+    module PyBytes : sig
+        val create : Bytes.t -> Object.t
+    end
+
+    module PyUnicode : sig
+        val create : string -> Object.t
     end
 
     type t =
@@ -114,3 +162,4 @@ module type PYTHON = sig
     val ($) : Object.t -> t list -> Object.t
     val append_path : string list -> unit
 end
+
