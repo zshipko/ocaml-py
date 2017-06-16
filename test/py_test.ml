@@ -39,6 +39,15 @@ let py_test_dict t =
         (fun () -> k, v)
         (py_test_dict_data.(i), i + 1)) d'
 
+let py_test_getitem_dict t =
+    let d = !$(Dict [
+        String "a", Int 1;
+        String "b", Int 2;
+        String "b", Int 3; (* Notice b was set twice *)
+    ]) in
+    Test.check t "Getitem a" (fun () -> Object.get_item_s d "a" |> Object.to_int) 1;
+    Test.check t "Getitem b" (fun () -> Object.get_item d (Object.from_string "b") |> Object.to_int) 3
+
 let py_test_iter t =
     let l = !$(List [
         Int 1;
@@ -55,12 +64,14 @@ let py_test_iter t =
     Test.check_raise t "Python check iter end" (fun () -> PyIter.next i)
 
 
+
 let simple = [
     py_test_int;
     py_test_string;
     py_test_list;
     py_test_tuple;
     py_test_dict;
+    py_test_getitem_dict;
     py_test_iter;
 ]
 
