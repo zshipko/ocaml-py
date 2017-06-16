@@ -29,6 +29,7 @@ type op =
 exception Invalid_type
 exception Invalid_object
 exception Python_error of string
+exception End_iteration
 
 module type PYTHON = sig
     module C : sig

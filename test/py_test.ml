@@ -39,6 +39,21 @@ let py_test_dict t =
         (fun () -> k, v)
         (py_test_dict_data.(i), i + 1)) d'
 
+let py_test_iter t =
+    let l = !$(List [
+        Int 1;
+        Int 2;
+        Int 3;
+    ]) in
+    let i = Object.iter l in
+    let o = Object.next i in
+    let _ = Test.check t "Python check iter 1" (fun () -> Object.to_int o) 1 in
+    let o = Object.next i in
+    let _ = Test.check t "Python check iter 2" (fun () -> Object.to_int o) 2 in
+    let o = Object.next i in
+    let _ = Test.check t "Python check iter 3" (fun () -> Object.to_int o) 3 in
+    Test.check_raise t "Pythn check iter end" (fun () -> Object.next i)
+
 
 let simple = [
     py_test_int;
@@ -46,6 +61,7 @@ let simple = [
     py_test_list;
     py_test_tuple;
     py_test_dict;
+    py_test_iter;
 ]
 
 let _ =
