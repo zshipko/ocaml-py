@@ -75,27 +75,6 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         let length obj =
             C._PyObject_Length obj
 
-        let get_item obj k =
-            wrap (C._PyObject_GetItem obj k)
-
-        let del_item obj k =
-            if C._PyObject_DelItem obj k = (-1) then raise (get_python_error ())
-
-        let set_item obj k v =
-            if C._PyObject_SetItem obj k v = (-1) then raise (get_python_error ())
-
-        let get_attr obj k =
-            wrap (C._PyObject_GetAttr obj k)
-
-        let set_attr obj k v =
-            if C._PyObject_SetAttr obj k v = (-1) then raise (get_python_error ())
-
-        let del_attr obj k =
-            if C._PyObject_SetAttr obj k null = (-1) then raise (get_python_error ())
-
-        let has_attr obj k =
-            C._PyObject_HasAttr obj k
-
         (* Type conversions *)
 
         let to_string a =
@@ -145,6 +124,60 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             C._PyObject_RichCompareBool a b (Obj.magic op : int)
 
         let is_none x = compare x none EQ
+
+        (* Acessing attrs/items *)
+
+        let get_item obj k =
+            wrap (C._PyObject_GetItem obj k)
+
+        let del_item obj k =
+            if C._PyObject_DelItem obj k = (-1) then raise (get_python_error ())
+
+        let set_item obj k v =
+            wrap_status (C._PyObject_SetItem obj k v)
+
+        let get_attr obj k =
+            wrap (C._PyObject_GetAttr obj k)
+
+        let set_attr obj k v =
+            wrap_status (C._PyObject_SetAttr obj k v)
+
+        let del_attr obj k =
+            wrap_status (C._PyObject_SetAttr obj k null)
+
+        let has_attr obj k =
+            C._PyObject_HasAttr obj k
+
+        let get_item_s obj k =
+            wrap (C._PyObject_GetItem obj (from_string k))
+
+        let del_item_s obj k =
+            wrap_status (C._PyObject_DelItem obj (from_string k))
+
+        let set_item_s obj k v =
+            wrap_status (C._PyObject_SetItem obj (from_string k) v)
+
+        let get_attr_s obj k =
+            wrap (C._PyObject_GetAttr obj (from_string k))
+
+        let set_attr_s obj k v =
+            wrap_status (C._PyObject_SetAttr obj (from_string k) v)
+
+        let del_attr_s obj k =
+            wrap_status (C._PyObject_SetAttr obj (from_string k) null)
+
+        let has_attr_s obj k =
+            C._PyObject_HasAttr obj (from_string k)
+
+        let get_item_i obj k =
+            wrap (C._PyObject_GetItem obj (from_int k))
+
+        let del_item_i obj k =
+            wrap_status (C._PyObject_DelItem obj (from_int k))
+
+        let set_item_i obj k v =
+            wrap_status (C._PyObject_SetItem obj (from_int k) v)
+
 
         let id a = a
 
@@ -198,9 +231,6 @@ module Make(V : S.VERSION) : S.PYTHON = struct
 
         let invert a =
             wrap (C._PyNumber_Invert a)
-
-
-
     end
 
     module PyIter = struct
@@ -210,6 +240,16 @@ module Make(V : S.VERSION) : S.PYTHON = struct
 
         let next x =
             wrap_iter (C._PyIter_Next x)
+
+        let map fn x =
+            let dst = ref [] in
+            let _ = try
+                while true do
+                    let n = next x in
+                    dst := fn n::!dst
+                done
+            with End_iteration -> () in
+            List.rev !dst
     end
 
     module PyDict = struct

@@ -29,11 +29,22 @@ module type PYTHON = sig
         val length : t -> int64
 
         val get_item : t -> t -> t
+        val get_item_s : t -> string -> t
+        val get_item_i : t -> int -> t
         val del_item : t -> t -> unit
+        val del_item_s : t -> string -> unit
+        val del_item_i : t -> int -> unit
         val set_item : t -> t -> t -> unit
+        val set_item_s : t -> string -> t -> unit
+        val set_item_i : t -> int -> t -> unit
         val get_attr : t -> t -> t
+        val get_attr_s : t -> string -> t
         val del_attr : t -> t -> unit
+        val del_attr_s : t -> string -> unit
         val set_attr : t -> t -> t -> unit
+        val set_attr_s : t -> string -> t -> unit
+        val has_attr : t -> t -> bool
+        val has_attr_s : t -> string -> bool
 
         val to_string : t -> string
         val from_string : string -> t
@@ -77,6 +88,7 @@ module type PYTHON = sig
         type t
         val get : Object.t -> t
         val next : t -> Object.t
+        val map : (Object.t -> 'a) -> t -> 'a list
     end
 
     module PyDict : sig
