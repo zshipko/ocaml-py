@@ -64,6 +64,14 @@ let py_test_iter t =
     Test.check_raise t "Python check iter end" (fun () -> PyIter.next i)
 
 
+let py_test_buffer t =
+    let a = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'] in
+    let b = PyByteArray.from_list a in
+    let _ = PyByteArray.set b 0 'z' in
+    let c = PyBuffer.from_object ~readonly:false b in
+    let _ = PyBuffer.set c 1 'y' in
+    Test.check t "Python check byte array" (fun () -> PyByteArray.get_string b) "zycdefg"
+
 
 let simple = [
     py_test_int;
@@ -73,6 +81,7 @@ let simple = [
     py_test_dict;
     py_test_getitem_dict;
     py_test_iter;
+    py_test_buffer;
 ]
 
 let _ =

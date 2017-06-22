@@ -335,6 +335,7 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         type t = {
             buf : b;
             data : char CArray.t;
+            readonly : bool;
         }
 
         let from_object ?readonly:(readonly=true) obj =
@@ -344,13 +345,15 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             else {
                 buf = b;
                 data = CArray.from_ptr (getf !@b C.buf) (getf !@b C.len |> Int64.to_int);
+                readonly = readonly;
             }
 
         let get b i =
             CArray.get b.data i
 
         let set b i x =
-            CArray.set b.data i x
+            if not b.readonly then
+                CArray.set b.data i x
 
         let length b =
             CArray.length b.data
