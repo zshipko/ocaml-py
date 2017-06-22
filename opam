@@ -2,11 +2,11 @@ opam-version: "1.2"
 version: "0.2"
 maintainer: "Zach Shipko <zachshipko@gmail.com>"
 authors: ["Zach Shipko <zachshipko@gmail.com>"]
-homepage: "https://github.com/zshipko/py"
-doc: "https://github.com/zshipko/py/doc"
+homepage: "https://github.com/zshipko/ocaml-py"
+doc: "https://github.com/zshipko/ocaml-py/doc"
 license: "ISC"
-dev-repo: "https://github.com/zshipko/py.git"
-bug-reports: "https://github.com/zshipko/py/issues"
+dev-repo: "https://github.com/zshipko/ocaml-py.git"
+bug-reports: "https://github.com/zshipko/ocaml-py/issues"
 tags: []
 available: [ ocaml-version >= "4.03.0"]
 depends:
