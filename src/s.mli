@@ -144,7 +144,6 @@ module PyBuffer : sig
         type t = {
             buf : b;
             data : char Ctypes.CArray.t;
-            readonly : bool;
         }
         val from_object : ?readonly:bool -> Object.t -> t
         val get : t -> int -> char
