@@ -150,6 +150,9 @@ module PyBuffer : sig
         val get : t -> int -> char
         val set : t -> int -> char -> unit
         val length : t -> int
+        val shape : t -> int64 array
+        val strides : t -> int64 array
+        val ndim : t -> int
     end
 
     module PyByteArray : sig

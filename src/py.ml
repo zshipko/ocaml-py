@@ -355,8 +355,21 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             if not b.readonly then
                 CArray.set b.data i x
 
-        let length b =
-            CArray.length b.data
+        let length a =
+            getf !@(a.buf) C.len |> Int64.to_int
+
+        let ndim a =
+            getf !@(a.buf) C.ndim
+
+        let strides a =
+            let x = getf !@(a.buf) C.strides in
+            let n = ndim a in
+            CArray.from_ptr x n |> CArray.to_list |> Array.of_list
+
+        let shape a =
+            let x = getf !@(a.buf) C.shape in
+            let n = ndim a in
+            CArray.from_ptr x n |> CArray.to_list |> Array.of_list
     end
 
     module PyByteArray = struct
