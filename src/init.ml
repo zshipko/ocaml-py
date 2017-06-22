@@ -50,11 +50,11 @@ module Init(V : S.VERSION) = struct
 
     (* Unicode *)
     let _PyUnicode_AsUTF8 = foreign ~from "PyUnicode_AsUTF8" (pyobject @-> returning string)
-    let _PyUnicode_FromStringAndSize = foreign ~from "PyUnicode_FromStringAndSize" (string @-> int @-> returning pyobject)
+    let _PyUnicode_FromStringAndSize = foreign ~from "PyUnicode_FromStringAndSize" (string @-> int64_t @-> returning pyobject)
 
     (* Bytes *)
     let _PyBytes_AsString = foreign ~from "PyBytes_AsString" (pyobject @-> returning string)
-    let _PyBytes_FromStringAndSize = foreign ~from "PyBytes_FromStringAndSize" (string @-> int @-> returning pyobject)
+    let _PyBytes_FromStringAndSize = foreign ~from "PyBytes_FromStringAndSize" (string @-> int64_t @-> returning pyobject)
 
     (* Long *)
     let _PyLong_AsLong = foreign ~from "PyLong_AsLong" (pyobject @-> returning int)
@@ -135,9 +135,31 @@ module Init(V : S.VERSION) = struct
     let _PyNumber_Absolute = foreign ~from "PyNumber_Absolute" (pyobject @-> returning pyobject)
     let _PyNumber_Invert = foreign ~from "PyNumber_Invert" (pyobject @-> returning pyobject)
 
+    (* Buffer *)
 
+    type _Py_buffer
+    let _Py_buffer : _Py_buffer structure typ = structure "Py_buffer"
+    let buf = field _Py_buffer "buf" (ptr char)
+    let obj = field _Py_buffer "obj" (ptr void)
+    let len = field _Py_buffer "len" int64_t
+    let readonly = field _Py_buffer "readonly" int
+    let itemsize = field _Py_buffer "itemsize" int64_t
+    let fornat = field _Py_buffer "format" string
+    let ndim = field _Py_buffer "ndim" int
+    let shape = field _Py_buffer "shape" (ptr int64_t)
+    let strides = field _Py_buffer "strides" (ptr int64_t)
+    let suboffsets = field _Py_buffer "suboffsets" (ptr int64_t)
+    let internal = field _Py_buffer "internal" (ptr void)
+    let () = seal _Py_buffer
 
+    type pybuffer = _Py_buffer structure ptr
+    let pybuffer = ptr _Py_buffer
 
+    let _PyObject_GetBuffer = foreign ~from "PyObject_GetBuffer" (pyobject @-> pybuffer @-> int @-> returning int)
+    let _PyBuffer_Release = foreign ~from "PyBuffer_Release" (pybuffer @-> returning void)
 
-
+    let _PyByteArray_FromObject = foreign ~from "PyByteArray_FromObject" (pyobject @-> returning pyobject)
+    let _PyByteArray_AsString = foreign ~from "PyByteArray_AsString" (pyobject @-> returning (ptr char))
+    let _PyByteArray_Size = foreign ~from "PyByteArray_Size" (pyobject @-> returning int64_t)
+    let _PyByteArray_FromStringAndSize = foreign ~from "PyByteArray_FromStringAndSize" (ptr char @-> int64_t @-> returning pyobject)
 end

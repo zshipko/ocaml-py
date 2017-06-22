@@ -83,7 +83,7 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             decref x; res
 
         let from_string s =
-            wrap (C._PyUnicode_FromStringAndSize s (String.length s))
+            wrap (C._PyUnicode_FromStringAndSize s (String.length s |> Int64.of_int))
 
         let to_bytes a =
             let x = C._PyObject_Bytes a in
@@ -91,7 +91,7 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             decref x; Bytes.of_string res
 
         let from_bytes s =
-            wrap (C._PyBytes_FromStringAndSize (Bytes.to_string s) (Bytes.length s))
+            wrap (C._PyBytes_FromStringAndSize (Bytes.to_string s) (Bytes.length s |> Int64.of_int))
 
         let to_int a =
             C._PyLong_AsLong a
@@ -330,6 +330,59 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         let create = Object.from_bytes
     end
 
+    module PyBuffer = struct
+        type b = C.pybuffer
+        type t = {
+            buf : b;
+            data : char CArray.t;
+        }
+
+        let from_object ?readonly:(readonly=true) obj =
+            let b = allocate_n ~finalise:C._PyBuffer_Release C._Py_buffer ~count:1 in
+            if C._PyObject_GetBuffer obj b (if readonly then 0 else 1) = -1 then
+                raise (get_python_error ())
+            else {
+                buf = b;
+                data = CArray.from_ptr (getf !@b C.buf) (getf !@b C.len |> Int64.to_int);
+            }
+
+        let get b i =
+            CArray.get b.data i
+
+        let set b i x =
+            CArray.set b.data i x
+
+        let length b =
+            CArray.length b.data
+    end
+
+    module PyByteArray = struct
+        let from_list x =
+            wrap (C._PyByteArray_FromStringAndSize (CArray.of_list char x |> CArray.start) (List.length x |> Int64.of_int))
+
+        let from_object x = wrap (C._PyByteArray_FromObject x)
+
+        let get_string x =
+            let s = C._PyByteArray_AsString x in
+            let len = C._PyByteArray_Size x in
+            string_from_ptr s ~length:(Int64.to_int len)
+
+        let get a i : char =
+            let b = C._PyByteArray_AsString a in
+            let b = CArray.from_ptr b (C._PyByteArray_Size a |> Int64.to_int) in
+            CArray.get b i
+
+        let set a i x =
+            let b = C._PyByteArray_AsString a in
+            let b = CArray.from_ptr b (C._PyByteArray_Size a |> Int64.to_int) in
+            CArray.set b i x
+
+        let length a =
+            let b = C._PyByteArray_AsString a in
+            let b = CArray.from_ptr b (C._PyByteArray_Size a |> Int64.to_int) in
+            CArray.length b
+    end
+
     type t =
         | PyObject of Object.t
         | PyNone
@@ -369,10 +422,14 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         C._Py_Finalize ();
         initialized := false
 
+    let wchar_s s =
+        let s' = C._Py_DecodeLocale s null in
+        Gc.finalise C._PyMem_RawFree s'; s'
+
     (** Initialize the Python interpreter *)
     let initialize ?initsigs:(initsigs=true) () =
         if not !initialized then
-            let name = C._Py_DecodeLocale Sys.argv.(0) null in
+            let name = wchar_s Sys.argv.(0) in
             let _ = if name <> null then
                 let _ = program_name := Some name in
                 C._Py_SetProgramName name in

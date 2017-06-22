@@ -157,6 +157,28 @@ module type PYTHON = sig
         val create : string -> Object.t
     end
 
+    module PyBuffer : sig
+        type b
+        type t = {
+            buf : b;
+            data : char Ctypes.CArray.t;
+        }
+        val from_object : ?readonly:bool -> Object.t -> t
+        val get : t -> int -> char
+        val set : t -> int -> char -> unit
+        val length : t -> int
+    end
+
+    module PyByteArray : sig
+        val from_list : char list -> Object.t
+        val from_object : Object.t -> Object.t
+        val get : Object.t -> int -> char
+        val set : Object.t -> int -> char -> unit
+        val length : Object.t -> int
+        val from_object : Object.t -> Object.t
+        val get_string : Object.t -> string
+    end
+
     type t =
         | PyObject of Object.t
         | PyNone
