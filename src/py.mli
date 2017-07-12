@@ -213,11 +213,16 @@ module type PYTHON = sig
     val run : Object.t -> ?kwargs:Object.t -> t list -> Object.t
     val import : string -> Object.t
 
-    val (!$) : t -> Object.t
-    val ($) : Object.t -> t list -> Object.t
+    val ( !$ ) : t -> Object.t
+    val ( $ ) : Object.t -> t list -> Object.t
+    val ( $. ) : Object.t -> t -> Object.t
+    val ( <-$. ) : (Object.t * t) -> t -> unit
+    val ( $-> ) : Object.t -> t -> Object.t
+    val ( <-$ ) : (Object.t * t) -> t -> unit
     val append_path : string list -> unit
 end
 
+val lib : string -> (module VERSION)
 module Make(V : VERSION) : PYTHON
 
 (*---------------------------------------------------------------------------

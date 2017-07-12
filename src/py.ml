@@ -496,14 +496,18 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         | None -> null in
         C._PyObject_Call fn args kw
 
-    let (!$) obj = to_object obj
+    let ( !$ ) obj = to_object obj
 
     let run fn ?kwargs args =
         call ~args:!$(Tuple (Array.of_list args)) ?kwargs fn
 
     let import name = wrap (C._PyImport_ImportModule name)
 
-    let ($) fn args = run fn args
+    let ( $ ) fn args = run fn args
+    let ( $. ) obj attr = Object.get_attr obj (!$attr)
+    let ( <-$.) (obj, key) value = Object.set_attr obj (!$key) (!$value)
+    let ( $-> ) obj item = Object.get_item obj (!$item)
+    let ( <-$ ) (obj, key) value = Object.set_item obj (!$key) (!$value)
 
     let append_path files =
         let sys = import "sys" in
@@ -514,3 +518,8 @@ module Make(V : S.VERSION) : S.PYTHON = struct
 
     let () = initialize ()
 end
+
+let lib name : (module VERSION) =
+    (module struct
+        let lib = name
+    end)
