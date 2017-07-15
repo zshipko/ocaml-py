@@ -47,42 +47,63 @@ module type PYTHON = sig
         val has_attr_s : t -> string -> bool
 
         val to_string : t -> string
-        val from_string : string -> t
         val to_bytes : t -> bytes
-        val from_bytes : bytes -> t
         val to_int : t -> int
-        val from_int : int -> t
+
         val to_int64 : t -> int64
-        val from_int64 : int64 -> t
         val to_float : t -> float
-        val from_float : float -> t
         val to_bool : t -> bool
         val from_bool : bool -> t
         val none : t
         val incref_none : unit -> t
         val compare : t -> t -> op -> bool
 
-        val id : 'a -> 'a
-        val array : (t -> 'a) -> t -> 'a array
-        val list : (t -> 'a) -> t -> 'a list
+        val to_array : (t -> 'a) -> t -> 'a array
+        val to_list : (t -> 'a) -> t -> 'a list
 
         val contains : t -> t -> bool
         val concat : t -> t -> t
-        val add : t -> t -> t
-        val sub : t -> t -> t
-        val mul : t -> t -> t
-        val div : t -> t -> t
-        val floor_div : t -> t -> t
-        val rem : t -> t -> t
-        val divmod : t -> t -> t
-        val neg : t -> t
-        val pos : t -> t
-        val abs : t -> t
-        val invert : t -> t
     end
 
     val wrap : pyobject -> Object.t
     val wrap_status : int -> unit
+
+    module PyNumber : sig
+        val create_float : float -> Object.t
+        val create_int : int -> Object.t
+        val create_int64 : int64 -> Object.t
+        val add : Object.t -> Object.t -> Object.t
+        val sub : Object.t -> Object.t -> Object.t
+        val mul : Object.t -> Object.t -> Object.t
+        val matmul : Object.t -> Object.t -> Object.t
+        val div : Object.t -> Object.t -> Object.t
+        val floor_div : Object.t -> Object.t -> Object.t
+        val rem : Object.t -> Object.t -> Object.t
+        val divmod : Object.t -> Object.t -> Object.t
+        val neg : Object.t -> Object.t
+        val pos : Object.t -> Object.t
+        val abs : Object.t -> Object.t
+        val invert : Object.t -> Object.t
+        val power : Object.t -> Object.t -> Object.t
+        val lshift : Object.t -> Object.t -> Object.t
+        val rshift : Object.t -> Object.t -> Object.t
+        val band : Object.t -> Object.t -> Object.t
+        val bor : Object.t -> Object.t -> Object.t
+        val bxor : Object.t -> Object.t -> Object.t
+        val add_inplace : Object.t -> Object.t -> Object.t
+        val sub_inplace : Object.t -> Object.t -> Object.t
+        val mul_inplace : Object.t -> Object.t -> Object.t
+        val matmul_inplace : Object.t -> Object.t -> Object.t
+        val div_inplace : Object.t -> Object.t -> Object.t
+        val floor_div_inplace : Object.t -> Object.t -> Object.t
+        val rem_inplace : Object.t -> Object.t -> Object.t
+        val power_inplace : Object.t -> Object.t -> Object.t
+        val lshift_inplace : Object.t -> Object.t -> Object.t
+        val rshift_inplace : Object.t -> Object.t -> Object.t
+        val band_inplace : Object.t -> Object.t -> Object.t
+        val bor_inplace : Object.t -> Object.t -> Object.t
+        val bxor_inplace : Object.t -> Object.t -> Object.t
+    end
 
     module PyIter : sig
         type t
@@ -131,6 +152,25 @@ module type PYTHON = sig
         val reload : Object.t -> Object.t
     end
 
+    module PyCell : sig
+        val create : Object.t -> Object.t
+        val get : Object.t -> Object.t
+        val set : Object.t -> Object.t -> unit
+    end
+
+    module PyThreadState : sig
+        type t
+        val save : unit -> t
+        val restore : t -> unit
+        val get : unit -> t
+        val swap : t -> t
+        val clear : t -> unit
+        val delete : t -> unit
+        val get_dict : t -> Object.t
+        val new_interpreter : unit -> t
+        val end_interpreter : t -> unit
+    end
+
     module PyBytes : sig
         val create : Bytes.t -> Object.t
     end
@@ -139,13 +179,13 @@ module type PYTHON = sig
         val create : string -> Object.t
     end
 
-module PyBuffer : sig
+    module PyBuffer : sig
         type b
         type t = {
             buf : b;
             data : char Ctypes.CArray.t;
         }
-        val from_object : ?readonly:bool -> Object.t -> t
+        val create : ?readonly:bool -> Object.t -> t
         val get : t -> int -> char
         val set : t -> int -> char -> unit
         val length : t -> int
@@ -156,18 +196,17 @@ module PyBuffer : sig
 
     module PyByteArray : sig
         val from_list : char list -> Object.t
-        val from_object : Object.t -> Object.t
+        val create : Object.t -> Object.t
         val get : Object.t -> int -> char
         val set : Object.t -> int -> char -> unit
         val length : Object.t -> int
-        val from_object : Object.t -> Object.t
         val get_string : Object.t -> string
     end
 
-
     type t =
-        | PyObject of Object.t
-        | PyNone
+        | Py of Object.t
+        | Cell of Object.t
+        | Nil
         | Bool of bool
         | Int of int
         | Int64 of int64
@@ -203,5 +242,7 @@ module PyBuffer : sig
     val ( $-> ) : Object.t -> t -> Object.t
     val ( <-$ ) : (Object.t * t) -> t -> unit
     val append_path : string list -> unit
+    val pickle : Object.t -> bytes
+    val unpickle : bytes -> Object.t
 end
 

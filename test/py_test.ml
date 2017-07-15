@@ -13,13 +13,13 @@ let py_test_string t =
 
 let py_test_list t =
     let l = !$(List [Int 1; Int 2; Int 3]) in
-    let l' =  Object.list Object.to_int l in
+    let l' =  Object.to_list Object.to_int l in
     List.iteri (fun i x ->
         Test.check t "Python check list" (fun () -> x) (i + 1)) l'
 
 let py_test_tuple t =
     let l = !$(Tuple [| Int 1; Int 2; Int 3 |]) in
-    let l' = Object.list Object.to_int l in
+    let l' = Object.to_list Object.to_int l in
     List.iteri (fun i x ->
         Test.check t "Python check tuple" (fun () -> x) (i + 1)) l'
 
@@ -46,7 +46,7 @@ let py_test_getitem_dict t =
         String "b", Int 3; (* Notice b was set twice *)
     ]) in
     Test.check t "Getitem a" (fun () -> Object.get_item_s d "a" |> Object.to_int) 1;
-    Test.check t "Getitem b" (fun () -> Object.get_item d (Object.from_string "b") |> Object.to_int) 3
+    Test.check t "Getitem b" (fun () -> Object.get_item d (PyUnicode.create "b") |> Object.to_int) 3
 
 let py_test_iter t =
     let l = !$(List [
@@ -68,7 +68,7 @@ let py_test_buffer t =
     let a = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'] in
     let b = PyByteArray.from_list a in
     let _ = PyByteArray.set b 0 'z' in
-    let c = PyBuffer.from_object ~readonly:false b in
+    let c = PyBuffer.create ~readonly:false b in
     let _ = PyBuffer.set c 1 'y' in
     Test.check t "Python check byte array" (fun () -> PyByteArray.get_string b) "zycdefg"
 
