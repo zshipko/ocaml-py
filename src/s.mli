@@ -246,5 +246,6 @@ module type PYTHON = sig
     val append_path : string list -> unit
     val pickle : Object.t -> bytes
     val unpickle : bytes -> Object.t
+    val print : t list -> unit
 end
 

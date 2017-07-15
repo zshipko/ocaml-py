@@ -632,6 +632,8 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         let pickle = PyModule.get "pickle" in
         pickle $. String "loads" $ [Bytes b]
 
+    let print args = eval "print" $ args |> ignore
+
     let () = initialize ()
 end
 
