@@ -77,3 +77,7 @@ In the distribution sample programs and tests are located in the
 with:
 
     topkg build --tests true && topkg test
+
+## Libraries using `py`
+
+- [numpy](https://github.com/zshipko/ocaml-numpy)
