@@ -229,6 +229,8 @@ module type PYTHON = sig
     (** Evaluate a string and return the response *)
     val eval : ?globals:Object.t -> ?locals:Object.t -> string -> Object.t
 
+    val none : unit -> Object.t
+
     (** Call a Python Object *)
     val call : ?args:Object.t -> ?kwargs:Object.t -> Object.t -> Object.t
 

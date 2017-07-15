@@ -594,6 +594,8 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             | None -> PyDict.create [] in
         wrap (C._PyRun_StringFlags s (258) g l null)
 
+    let none () = eval "None"
+
     (** Call a Python Object *)
     let call ?args:(args=PyTuple.create [||]) ?kwargs fn =
         let kw = match kwargs with
