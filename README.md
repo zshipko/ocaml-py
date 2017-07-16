@@ -80,4 +80,4 @@ with:
 
 ## Libraries using `py`
 
-- [numpy](https://github.com/zshipko/ocaml-numpy)
+- [ocaml-numpy](https://github.com/zshipko/ocaml-numpy)

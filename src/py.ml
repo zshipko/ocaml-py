@@ -139,12 +139,16 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         let strides a =
             let x = getf !@(a.buf) C.strides in
             let n = ndim a in
-            CArray.from_ptr x n |> CArray.to_list |> Array.of_list
+            CArray.from_ptr x n
+            |> CArray.to_list
+            |> Array.of_list
 
         let shape a =
             let x = getf !@(a.buf) C.shape in
             let n = ndim a in
-            CArray.from_ptr x n |> CArray.to_list |> Array.of_list
+            CArray.from_ptr x n
+            |> CArray.to_list
+            |> Array.of_list
     end
 
     module PyByteArray = struct
