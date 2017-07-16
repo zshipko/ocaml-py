@@ -584,6 +584,17 @@ module Make(V : S.VERSION) : S.PYTHON = struct
     let exec s =
         not (C._PyRun_SimpleStringFlags s null)
 
+    let globals () =
+        let x = C._PyEval_GetGlobals () in
+        if Object.is_null x then None else Some x
+
+    let locals () =
+        let x = C._PyEval_GetLocals () in
+        if Object.is_null x then None else Some x
+
+    let builtins () =
+        C._PyEval_GetBuiltins ()
+
     (** Evalute a string and return the result *)
     let eval ?globals ?locals s =
         let g = match globals with

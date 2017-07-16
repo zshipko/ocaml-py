@@ -245,6 +245,10 @@ module type PYTHON = sig
     (** Execute a string for side-effects only *)
     val exec : string -> bool
 
+    val locals : unit -> Object.t option
+    val globals : unit -> Object.t option
+    val builtins : unit -> Object.t
+
     (** Evaluate a string and return the response *)
     val eval : ?globals:Object.t -> ?locals:Object.t -> string -> Object.t
 

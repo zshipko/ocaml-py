@@ -76,6 +76,11 @@ module Init(V : S.VERSION) = struct
     let _Py_InitializeEx = foreign ~from "Py_InitializeEx" (int @-> returning void)
     let _Py_Finalize = foreign ~from "Py_Finalize" (void @-> returning void)
     let _PyEval_InitThreads = foreign ~from "PyEval_InitThreads" (void @-> returning void)
+    let _PyEval_GetLocals = foreign ~from "PyEval_GetLocals" (void @-> returning pyobject)
+    let _PyEval_GetGlobals = foreign ~from "PyEval_GetGlobals" (void @-> returning pyobject)
+    let _PyEval_GetBuiltins = foreign ~from "PyEval_GetBuiltins" (void @-> returning pyobject)
+
+
     let _PyRun_SimpleStringFlags = foreign ~from "PyRun_SimpleStringFlags" (string @-> ptr void @-> returning bool)
     let _PyRun_StringFlags = foreign ~from "PyRun_StringFlags" (string @-> int @-> pyobject @-> pyobject @-> ptr void @-> returning pyobject)
     let _PyErr_Clear = foreign ~from "PyErr_Clear" (void @-> returning void)
