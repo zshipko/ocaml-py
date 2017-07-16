@@ -146,6 +146,7 @@ module type PYTHON = sig
     val get_module_dict : unit -> Object.t
 
     module PyModule : sig
+        val import : string -> Object.t
         val set : string -> Object.t -> unit
         val get : string -> Object.t
         val get_dict : string -> Object.t
@@ -240,7 +241,6 @@ module type PYTHON = sig
     val call : ?args:Object.t -> ?kwargs:Object.t -> Object.t -> Object.t
 
     val run : Object.t -> ?kwargs:Object.t -> t list -> Object.t
-    val import : string -> Object.t
 
     val ( !$ ) : t -> Object.t
     val ( $ ) : Object.t -> t list -> Object.t

@@ -461,6 +461,8 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         C._PyImport_GetModuleDict ()
 
     module PyModule = struct
+        let import name =
+            wrap (C._PyImport_Import (PyUnicode.create name))
 
         let set name m =
             let d = get_module_dict () in
@@ -622,8 +624,6 @@ module Make(V : S.VERSION) : S.PYTHON = struct
     let run fn ?kwargs args =
         call ~args:!$(Tuple (Array.of_list args)) ?kwargs fn
 
-    let import name = wrap (C._PyImport_ImportModule name)
-
     let ( $ ) fn args = run fn args
     let ( $. ) obj attr = Object.get_attr obj (!$attr)
     let ( <-$.) (obj, key) value = Object.set_attr obj (!$key) (!$value)
@@ -631,19 +631,19 @@ module Make(V : S.VERSION) : S.PYTHON = struct
     let ( <-$ ) (obj, key) value = Object.set_item obj (!$key) (!$value)
 
     let append_path files =
-        let sys = import "sys" in
+        let sys = PyModule.import "sys" in
         let pathString = !$(String "path") in
         let path = Object.get_attr sys pathString in
         let p = Object.to_list Object.to_string path @ files in
         Object.set_attr sys pathString (PyList.create (List.map PyUnicode.create p))
 
     let pickle obj =
-        let pickle = PyModule.get "pickle" in
+        let pickle = PyModule.import "pickle" in
         (pickle $. String "dumps" $ [Py obj])
         |> Object.to_bytes
 
     let unpickle b =
-        let pickle = PyModule.get "pickle" in
+        let pickle = PyModule.import "pickle" in
         pickle $. String "loads" $ [Bytes b]
 
     let print args = eval "print" $ args |> ignore

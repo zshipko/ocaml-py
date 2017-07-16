@@ -90,7 +90,7 @@ module Init(V : S.VERSION) = struct
     (* Module *)
     let _PyModule_GetDict = foreign ~from "PyModule_GetDict" (pyobject @-> returning pyobject)
     let _PyImport_AddModule = foreign ~from "PyImport_AddModule" (string @-> returning pyobject)
-    let _PyImport_ImportModule = foreign ~from "PyImport_ImportModule" (string @-> returning pyobject)
+    let _PyImport_Import = foreign ~from "PyImport_Import" (pyobject @-> returning pyobject)
     let _PyImport_ReloadModule = foreign ~from "PyImport_ReloadModule" (pyobject @-> returning pyobject)
     let _PyImport_GetModuleDict = foreign ~from "PyImport_GetModuleDict" (void @-> returning pyobject)
 
