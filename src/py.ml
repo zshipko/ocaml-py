@@ -474,6 +474,9 @@ module Make(V : S.VERSION) : S.PYTHON = struct
 
         let reload m =
             wrap (C._PyImport_ReloadModule m)
+
+        let main () =
+            get "__main__"
     end
 
     module PyCell = struct

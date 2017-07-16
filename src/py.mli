@@ -168,6 +168,7 @@ module type PYTHON = sig
         val get : string -> Object.t
         val get_dict : string -> Object.t
         val reload : Object.t -> Object.t
+        val main : unit -> Object.t
     end
 
     module PyCell : sig
