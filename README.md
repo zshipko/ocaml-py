@@ -38,7 +38,7 @@ Call a function defined in a module and return the result:
 Which is shorthand for
 
     let np = import "numpy" in
-    let np_array = Object.get_item_s np "array" in
+    let np_array = Object.get_attr_s np "array" in
     let arr = run np_array [List [Int 1; Int 2; Int 3]] in
     ...
 
