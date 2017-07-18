@@ -28,6 +28,12 @@ let open_lib lib =
 
 let from =
     try
+        open_lib "python3.4"
+    with _ -> try
+        open_lib "python3.5"
+    with _ -> try
+        open_lib "python3.6"
+    with _ -> try
         let proc = Unix.open_process_in "python3 -c 'import sys;print(sys.version_info.minor)'" in
         let minor_s = input_line proc in
         let _ = close_in proc in
