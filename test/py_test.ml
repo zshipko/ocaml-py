@@ -72,6 +72,16 @@ let py_test_buffer t =
     let _ = PyBuffer.set c 1 'y' in
     Test.check t "Python check byte array" (fun () -> PyByteArray.get_string b) "zycdefg"
 
+let py_test_thread_state t =
+    let a0 = PyThreadState.get () in
+    let _ = exec "a = 10" in
+    let a1 = new_interpreter () in
+    let _ = PyThreadState.swap a1 in
+    let _ = exec "a = 5" in
+    let _ = Test.check t "New thread state" (fun () -> eval "a" |> Object.to_int) 5 in
+    let _ = PyThreadState.swap a0 in
+    Test.check t "Old thread state" (fun () -> eval "a" |> Object.to_int) 10
+
 
 let simple = [
     py_test_int;
@@ -82,6 +92,7 @@ let simple = [
     py_test_getitem_dict;
     py_test_iter;
     py_test_buffer;
+    py_test_thread_state;
 ]
 
 let _ =

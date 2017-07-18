@@ -166,6 +166,11 @@ module Init(V : S.VERSION) = struct
     let _PyCell_Get = foreign ~from "PyCell_Get" (pyobject @-> returning pyobject)
     let _PyCell_Set = foreign ~from "PyCell_Set" (pyobject @-> pyobject @->  returning int)
 
+    (* Weakref *)
+    let _PyWeakref_NewRef = foreign ~from "PyWeakref_NewRef" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyWeakref_NewProxy = foreign ~from "PyWeakref_NewProxy" (pyobject @-> pyobject @-> returning pyobject)
+    let _PyWeakref_GetObject = foreign ~from "PyWeakref_GetObject" (pyobject @-> returning pyobject)
+
     (* Threads *)
     type thread = unit ptr
     let thread : thread typ = ptr void
@@ -206,4 +211,5 @@ module Init(V : S.VERSION) = struct
     let _PyByteArray_AsString = foreign ~from "PyByteArray_AsString" (pyobject @-> returning (ptr char))
     let _PyByteArray_Size = foreign ~from "PyByteArray_Size" (pyobject @-> returning int64_t)
     let _PyByteArray_FromStringAndSize = foreign ~from "PyByteArray_FromStringAndSize" (ptr char @-> int64_t @-> returning pyobject)
+    let _PySlice_New = foreign ~from "PySlice_New" (pyobject @-> pyobject @-> pyobject @-> returning pyobject)
 end

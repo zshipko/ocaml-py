@@ -496,6 +496,22 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             wrap_status (C._PyCell_Set cell v)
     end
 
+    module PySlice = struct
+        let create a b c =
+            wrap (C._PySlice_New a b c)
+    end
+
+    module PyWeakref = struct
+        let new_ref ?callback:(callback=Object.incref_none ()) obj =
+            wrap (C._PyWeakref_NewRef obj callback)
+
+        let new_proxy ?callback:(callback=Object.incref_none ()) obj =
+            wrap (C._PyWeakref_NewProxy obj callback)
+
+        let get_object ref =
+            wrap (C._PyWeakref_GetObject ref)
+    end
+
     module PyThreadState = struct
         type t = C.thread
 
@@ -518,15 +534,15 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             clear thr;
             C._PyThreadState_Delete thr
 
-        let  get_dict thr =
+        let get_dict thr =
             wrap (C._PyThreadState_GetDict thr)
-
-        let new_interpreter () =
-            C._Py_NewInterpreter ()
-
-        let end_interpreter thr =
-            C._Py_EndInterpreter thr
     end
+
+    let new_interpreter () =
+        C._Py_NewInterpreter ()
+
+    let end_interpreter thr =
+        C._Py_EndInterpreter thr
 
 
     type t =
@@ -543,11 +559,12 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         | Tuple of t array
         | Dict of (t * t) list
         | Set of t list
+        | Slice of t * t * t
 
     let rec to_object = function
         | Py o -> o
         | Cell c -> PyCell.create c
-        | Nil -> Object.none
+        | Nil -> Object.incref_none ()
         | Bool b -> Object.from_bool b
         | Int i -> PyNumber.create_int i
         | Int64 i -> PyNumber.create_int64 i
@@ -558,6 +575,7 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         | Tuple t -> PyTuple.create (Array.map to_object t)
         | Dict d -> PyDict.create (List.map (fun (k, v) -> to_object k, to_object v) d)
         | Set l -> PySet.create (PyList.create (List.map to_object l))
+        | Slice (a, b, c) -> PySlice.create (to_object a) (to_object b) (to_object c)
 
     let program_name : wchar_string option ref = ref None
 
@@ -573,6 +591,8 @@ module Make(V : S.VERSION) : S.PYTHON = struct
     let wchar_s s =
         let s' = C._Py_DecodeLocale s null in
         Gc.finalise C._PyMem_RawFree s'; s'
+
+    let none = Object.incref_none
 
     (** Initialize the Python interpreter *)
     let initialize ?initsigs:(initsigs=true) () =
@@ -613,8 +633,6 @@ module Make(V : S.VERSION) : S.PYTHON = struct
             | Some x -> x
             | None -> PyDict.create [] in
         wrap (C._PyRun_StringFlags s (258) g l null)
-
-    let none () = eval "None"
 
     (** Call a Python Object *)
     let call ?args:(args=PyTuple.create [||]) ?kwargs fn =

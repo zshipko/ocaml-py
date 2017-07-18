@@ -19,7 +19,7 @@ module type PYTHON = sig
     end
 
     module Object : sig
-        type t
+        type t = pyobject
         val to_pyobject : t -> pyobject
         val from_pyobject : pyobject -> t
         val is_null : t -> bool
@@ -143,6 +143,10 @@ module type PYTHON = sig
         val create : Object.t array -> Object.t
     end
 
+    module PySlice : sig
+        val create : Object.t -> Object.t -> Object.t -> Object.t
+    end
+
     val get_module_dict : unit -> Object.t
 
     module PyModule : sig
@@ -160,6 +164,12 @@ module type PYTHON = sig
         val set : Object.t -> Object.t -> unit
     end
 
+    module PyWeakref : sig
+        val new_ref : ?callback:Object.t -> Object.t -> Object.t
+        val new_proxy : ?callback:Object.t -> Object.t -> Object.t
+        val get_object : Object.t -> Object.t
+    end
+
     module PyThreadState : sig
         type t
         val save : unit -> t
@@ -169,9 +179,11 @@ module type PYTHON = sig
         val clear : t -> unit
         val delete : t -> unit
         val get_dict : t -> Object.t
-        val new_interpreter : unit -> t
-        val end_interpreter : t -> unit
     end
+
+    val new_interpreter : unit -> PyThreadState.t
+    val end_interpreter : PyThreadState.t -> unit
+
 
     module PyBytes : sig
         val create : Bytes.t -> Object.t
@@ -219,6 +231,7 @@ module type PYTHON = sig
         | Tuple of t array
         | Dict of (t * t) list
         | Set of t list
+        | Slice of t * t * t
 
     val to_object : t -> Object.t
 
@@ -253,4 +266,5 @@ module type PYTHON = sig
     val unpickle : bytes -> Object.t
     val print : t list -> unit
 end
+
 
