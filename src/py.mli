@@ -29,6 +29,7 @@ exception End_iteration
 
 module C : sig
     val from : Dl.library
+    val open_lib : string -> Dl.library
 end
 
 module Object : sig

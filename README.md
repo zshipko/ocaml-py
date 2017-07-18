@@ -77,6 +77,3 @@ with:
 
     topkg build --tests true && topkg test
 
-## Libraries using `py`
-
-- [ocaml-numpy](https://github.com/zshipko/ocaml-numpy)

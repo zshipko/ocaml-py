@@ -23,8 +23,10 @@ let open_lib lib =
         Dl.(dlopen ~filename:("lib" ^ lib) ~flags)
     with _ -> try
         Dl.(dlopen ~filename:lib ~flags)
-    with _ ->
+    with _ -> try
         Dl.(dlopen ~filename:(Sys.getenv "OCAML_PY_VERSION") ~flags)
+    with _ ->
+        Dl.(dlopen ?filename:None ~flags)
 
 let from =
     try
