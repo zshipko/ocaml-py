@@ -63,7 +63,7 @@ Set object index:
 Execute a string and return true/false depending on the status returned by Python:
 
     if exec "import tensorflow" then
-        let tf = Module.get "tensorflow" in # Load an existing module
+        let tf = Module.get "tensorflow" in  (* Load an existing module *)
         ...
 
 ## Sample programs
