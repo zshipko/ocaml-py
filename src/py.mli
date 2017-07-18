@@ -232,7 +232,7 @@ module PyByteArray : sig
 end
 
 type t =
-    | Py of Object.t
+    | Ptr of Object.t
     | Cell of Object.t
     | Nil
     | Bool of bool

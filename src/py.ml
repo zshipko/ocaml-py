@@ -542,7 +542,7 @@ let end_interpreter thr =
 
 
 type t =
-    | Py of Object.t
+    | Ptr of Object.t
     | Cell of Object.t
     | Nil
     | Bool of bool
@@ -558,7 +558,7 @@ type t =
     | Slice of t * t * t
 
 let rec to_object = function
-    | Py o -> o
+    | Ptr o -> o
     | Cell c -> PyCell.create c
     | Nil -> Object.incref_none ()
     | Bool b -> Object.from_bool b
@@ -662,7 +662,7 @@ let prepend_path files =
 
 let pickle obj =
     let pickle = PyModule.import "pickle" in
-    pickle $. String "dumps" $ [Py obj]
+    pickle $. String "dumps" $ [Ptr obj]
     |> Object.to_bytes
 
 let unpickle  b =
