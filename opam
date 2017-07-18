@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "0.3"
+version: "0.4"
 maintainer: "Zach Shipko <zachshipko@gmail.com>"
 authors: ["Zach Shipko <zachshipko@gmail.com>"]
 homepage: "https://github.com/zshipko/ocaml-py"
