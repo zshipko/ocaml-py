@@ -19,17 +19,9 @@ instructions.
 
 ## Introduction
 
-Initialize an interpreter:
-
-    module Python = Py.Make(struct
-        let lib = "python3.6"
-    end)
-
-**NOTE**: multiple interpreters cannot be used at the same time
-
 Simple conversion from OCaml to Python:
 
-    open Python
+    open Py
     let s = !$(String "a string")
     let f = !$(Float 12.3)
     let i = !$(Int 123)
@@ -57,8 +49,8 @@ Get object index:
 
 Set object index:
 
-    let _ = (arr, Int 0) <-$ Int 123 in
-    let _ = (some_dict, String "key") <-$ String "value" in
+    let _ = (a_list, Int 0) <-$ Int 123 in
+    let _ = (a_dict, String "key") <-$ String "value" in
     ...
 
 Execute a string and return true/false depending on the status returned by Python:

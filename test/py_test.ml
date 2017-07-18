@@ -1,8 +1,4 @@
-module Python = Py.Make(struct
-    let lib = "python3.5"
-end)
-
-open Python
+open Py
 
 let py_test_int t =
     Test.check t "Python int to OCaml int" (fun () -> !$(Int 99999) |> Object.to_int) 99999;

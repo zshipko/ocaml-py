@@ -8,7 +8,7 @@ exception End_iteration
 
 let initialized = ref false
 
-type op = S.op =
+type op =
     | LT
     | LE
     | EQ
@@ -16,11 +16,7 @@ type op = S.op =
     | GT
     | GE
 
-module type PYTHON = S.PYTHON
-module type VERSION = S.VERSION
-
-module Make(V : S.VERSION) : S.PYTHON = struct
-    module C = Init(V)
+module C = Init
 
     let get_python_error () =
         if C._PyErr_Occurred () <> 0 then
@@ -627,10 +623,10 @@ module Make(V : S.VERSION) : S.PYTHON = struct
     (** Evalute a string and return the result *)
     let eval ?globals ?locals s =
         let g = match globals with
-            | Some x -> x
+            | Some x -> to_object x
             | None -> PyModule.get_dict "__main__" in
         let l = match locals with
-            | Some x -> x
+            | Some x -> to_object x
             | None -> PyDict.create [] in
         wrap (C._PyRun_StringFlags s (258) g l null)
 
@@ -639,12 +635,12 @@ module Make(V : S.VERSION) : S.PYTHON = struct
         let kw = match kwargs with
         | Some k -> k
         | None -> null in
-        C._PyObject_Call fn args kw
+        wrap (C._PyObject_Call fn args kw)
 
     let ( !$ ) obj = to_object obj
 
-    let run fn ?kwargs args =
-        call ~args:!$(Tuple (Array.of_list args)) ?kwargs fn
+    let run fn ?kwargs:(kwargs=[]) args =
+        call ~args:!$(Tuple (Array.of_list args)) ~kwargs:!$(Dict kwargs) fn
 
     let ( $ ) fn args = run fn args
     let ( $. ) obj attr = Object.get_attr obj (!$attr)
@@ -661,19 +657,15 @@ module Make(V : S.VERSION) : S.PYTHON = struct
 
     let pickle obj =
         let pickle = PyModule.import "pickle" in
-        (pickle $. String "dumps" $ [Py obj])
+        pickle $. String "dumps" $ [Py obj]
         |> Object.to_bytes
 
-    let unpickle b =
+    let unpickle  b =
         let pickle = PyModule.import "pickle" in
         pickle $. String "loads" $ [Bytes b]
 
-    let print args = eval "print" $ args |> ignore
+    let print ?kwargs args =
+        run (eval "print") args ?kwargs
+        |> ignore
 
     let () = initialize ()
-end
-
-let lib name : (module VERSION) =
-    (module struct
-        let lib = name
-    end)

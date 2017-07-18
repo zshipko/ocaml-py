@@ -1,10 +1,6 @@
 type pyobject = unit Ctypes.ptr
 val pyobject : pyobject Ctypes.typ
 
-module type VERSION = sig
-    val lib : string
-end
-
 type op =
     | LT
     | LE
@@ -246,14 +242,14 @@ module type PYTHON = sig
     val builtins : unit -> Object.t
 
     (** Evaluate a string and return the response *)
-    val eval : ?globals:Object.t -> ?locals:Object.t -> string -> Object.t
+    val eval : ?globals:t -> ?locals:t -> string -> Object.t
 
     val none : unit -> Object.t
 
     (** Call a Python Object *)
     val call : ?args:Object.t -> ?kwargs:Object.t -> Object.t -> Object.t
 
-    val run : Object.t -> ?kwargs:Object.t -> t list -> Object.t
+    val run : Object.t -> ?kwargs:(t * t) list -> t list -> Object.t
 
     val ( !$ ) : t -> Object.t
     val ( $ ) : Object.t -> t list -> Object.t
@@ -264,7 +260,7 @@ module type PYTHON = sig
     val append_path : string list -> unit
     val pickle : Object.t -> bytes
     val unpickle : bytes -> Object.t
-    val print : t list -> unit
+    val print : ?kwargs:(t * t) list -> t list -> unit
 end
 
 
