@@ -650,10 +650,15 @@ module C = Init
 
     let append_path files =
         let sys = PyModule.import "sys" in
-        let pathString = !$(String "path") in
-        let path = Object.get_attr sys pathString in
+        let path = Object.get_attr_s sys "path" in
         let p = Object.to_list Object.to_string path @ files in
-        Object.set_attr sys pathString (PyList.create (List.map PyUnicode.create p))
+        Object.set_attr_s sys "path" (PyList.create (List.map PyUnicode.create p))
+
+    let prepend_path files =
+        let sys = PyModule.import "sys" in
+        let path = Object.get_attr_s sys "path" in
+        let p = files @ Object.to_list Object.to_string path in
+        Object.set_attr_s sys "path" (PyList.create (List.map PyUnicode.create p))
 
     let pickle obj =
         let pickle = PyModule.import "pickle" in

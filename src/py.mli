@@ -275,6 +275,7 @@ val ( <-$. ) : (Object.t * t) -> t -> unit
 val ( $-> ) : Object.t -> t -> Object.t
 val ( <-$ ) : (Object.t * t) -> t -> unit
 val append_path : string list -> unit
+val prepend_path : string list -> unit
 val pickle : Object.t -> bytes
 val unpickle : bytes -> Object.t
 val print : ?kwargs:(t * t) list -> t list -> unit
