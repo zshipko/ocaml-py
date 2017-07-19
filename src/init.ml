@@ -21,15 +21,13 @@ let open_lib lib =
         Dl.(dlopen ~filename:("lib" ^ lib ^ "m.dylib") ~flags)
     with _ -> try
         Dl.(dlopen ~filename:("lib" ^ lib) ~flags)
-    with _ -> try
-        Dl.(dlopen ~filename:lib ~flags)
-    with _ -> try
-        Dl.(dlopen ~filename:(Sys.getenv "OCAML_PY_VERSION") ~flags)
     with _ ->
-        Dl.(dlopen ?filename:None ~flags)
+        Dl.(dlopen ~filename:lib ~flags)
 
 let from =
     try
+        open_lib (Sys.getenv "OCAML_PY_VERSION")
+    with _-> try
         open_lib "python3.4"
     with _ -> try
         open_lib "python3.5"
