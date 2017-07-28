@@ -1,7 +1,7 @@
 open Ctypes
 open Foreign
 
-type pyobject = S.pyobject
+type pyobject = unit Ctypes.ptr
 let pyobject : pyobject Ctypes.typ = ptr void
 
 exception Python_not_found
