@@ -77,6 +77,9 @@ module Object : sig
 
     val contains : t -> t -> bool
     val concat : t -> t -> t
+
+    (** Call a Python Object *)
+    val call : ?args:t -> ?kwargs:t -> t -> t
 end
 
 val wrap : pyobject -> Object.t
@@ -261,24 +264,19 @@ val builtins : unit -> Object.t
 
 (** Evaluate a string and return the response *)
 val eval : ?globals:t -> ?locals:t -> string -> Object.t
-
 val none : unit -> Object.t
-
-(** Call a Python Object *)
-val call : ?args:Object.t -> ?kwargs:Object.t -> Object.t -> Object.t
-
 val run : Object.t -> ?kwargs:(t * t) list -> t list -> Object.t
 
 val ( !$ ) : t -> Object.t
 val ( $ ) : Object.t -> t list -> Object.t
 val ( $. ) : Object.t -> t -> Object.t
 val ( <-$. ) : (Object.t * t) -> t -> unit
-val ( $-> ) : Object.t -> t -> Object.t
-val ( <-$ ) : (Object.t * t) -> t -> unit
+val ( $| ) : Object.t -> t -> Object.t
+val ( <-$| ) : (Object.t * t) -> t -> unit
 val append_path : string list -> unit
 val prepend_path : string list -> unit
-val pickle : Object.t -> bytes
-val unpickle : bytes -> Object.t
+val pickle : ?kwargs:(t * t) list -> Object.t -> bytes
+val unpickle : ?kwargs:(t * t) list -> bytes -> Object.t
 val print : ?kwargs:(t * t) list -> t list -> unit
 
 (*---------------------------------------------------------------------------

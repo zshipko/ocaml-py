@@ -425,6 +425,13 @@ module Object = struct
 
     let concat a b =
         wrap (C._PySequence_Concat a b)
+
+    (** Call a Python Object *)
+    let call ?args:(args=PyTuple.create [||]) ?kwargs fn =
+        let kw = match kwargs with
+        | Some k -> k
+        | None -> null in
+        wrap (C._PyObject_Call fn args kw)
 end
 
 module PyDict = struct
@@ -630,23 +637,16 @@ let eval ?globals ?locals s =
         | None -> PyDict.create [] in
     wrap (C._PyRun_StringFlags s (258) g l null)
 
-(** Call a Python Object *)
-let call ?args:(args=PyTuple.create [||]) ?kwargs fn =
-    let kw = match kwargs with
-    | Some k -> k
-    | None -> null in
-    wrap (C._PyObject_Call fn args kw)
-
 let ( !$ ) obj = to_object obj
 
 let run fn ?kwargs:(kwargs=[]) args =
-    call ~args:!$(Tuple (Array.of_list args)) ~kwargs:!$(Dict kwargs) fn
+    Object.call ~args:!$(Tuple (Array.of_list args)) ~kwargs:!$(Dict kwargs) fn
 
 let ( $ ) fn args = run fn args
 let ( $. ) obj attr = Object.get_attr obj (!$attr)
 let ( <-$.) (obj, key) value = Object.set_attr obj (!$key) (!$value)
-let ( $-> ) obj item = Object.get_item obj (!$item)
-let ( <-$ ) (obj, key) value = Object.set_item obj (!$key) (!$value)
+let ( $| ) obj item = Object.get_item obj (!$item)
+let ( <-$| ) (obj, key) value = Object.set_item obj (!$key) (!$value)
 
 let append_path files =
     let sys = PyModule.import "sys" in
@@ -660,14 +660,14 @@ let prepend_path files =
     let p = files @ Object.to_list Object.to_string path in
     Object.set_attr_s sys "path" (PyList.create (List.map PyUnicode.create p))
 
-let pickle obj =
+let pickle ?kwargs obj =
     let pickle = PyModule.import "pickle" in
-    pickle $. String "dumps" $ [Ptr obj]
+    run (pickle $. String "dumps") ?kwargs [Ptr obj]
     |> Object.to_bytes
 
-let unpickle  b =
+let unpickle ?kwargs b =
     let pickle = PyModule.import "pickle" in
-    pickle $. String "loads" $ [Bytes b]
+    run (pickle $. String "loads") ?kwargs [Bytes b]
 
 let print ?kwargs args =
     run (eval "print") args ?kwargs

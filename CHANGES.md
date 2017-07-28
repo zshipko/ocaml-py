@@ -1,4 +1,5 @@
-vX.Y.Z YYYY-MM-DD Location
---------------------------
+v0.5 2017-07-27
+---------------
 
-First release. 
+- Majority of Python API covered
+- High level interface (Py.t)
