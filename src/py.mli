@@ -13,7 +13,7 @@
 type pyobject = unit Ctypes.ptr
 val pyobject : pyobject Ctypes.typ
 
-(** The op type is used specifically for calls to Python.compare *)
+(** The op type is used in calls to Object.compare *)
 type op =
     | LT
     | LE
@@ -27,30 +27,60 @@ exception Invalid_object
 exception Python_error of string
 exception End_iteration
 
+(** C makes the underlying Python C libraries available *)
 module C : sig
     val from : Dl.library
     val open_lib : string -> Dl.library
 end
 
+(** Object defines functions for working with generic Python objects *)
 module Object : sig
+
+    (** t is a pointer to PyObject *)
     type t = pyobject
-    val to_pyobject : t -> pyobject
-    val from_pyobject : pyobject -> t
+
+    (** Returns true if an object is null *)
     val is_null : t -> bool
+
+    (** Returns true if an object is None *)
     val is_none : t -> bool
+
+    (** Increments reference count for an object *)
     val incref : t -> unit
+
+    (** Decrements reference count for an object *)
     val decref : t -> unit
+
+    (** Returns the length of an object *)
     val length : t -> int64
 
+    (** Returns the element at the given index *)
     val get_item : t -> t -> t
+
+    (** Returns the element at the given string index *)
     val get_item_s : t -> string -> t
+
+    (** Returns the element at the given integer index *)
     val get_item_i : t -> int -> t
+
+    (** Deletes the item at the given index *)
     val del_item : t -> t -> unit
+
+    (** Deletes the item at the given string index *)
     val del_item_s : t -> string -> unit
+
+    (** Deletes the item at the given integer index *)
     val del_item_i : t -> int -> unit
+
+    (** Sets the item at the given index *)
     val set_item : t -> t -> t -> unit
+
+    (** Sets the item at the given string index *)
     val set_item_s : t -> string -> t -> unit
+
+    (** Sets the item at the given integer index *)
     val set_item_i : t -> int -> t -> unit
+
     val get_attr : t -> t -> t
     val get_attr_s : t -> string -> t
     val del_attr : t -> t -> unit
@@ -60,16 +90,28 @@ module Object : sig
     val has_attr : t -> t -> bool
     val has_attr_s : t -> string -> bool
 
+    (** Convert an object to OCaml string *)
     val to_string : t -> string
+
+    (** Convert an object to OCaml bytes *)
     val to_bytes : t -> bytes
+
+    (** Convert an object to OCaml int *)
     val to_int : t -> int
 
+    (** Convert an object to OCaml int64 *)
     val to_int64 : t -> int64
+
+    (** Convert an object to OCaml float *)
     val to_float : t -> float
+
+    (** Convert an object to OCaml bool *)
     val to_bool : t -> bool
+
+    (** Create a boolean object *)
     val from_bool : bool -> t
-    val none : t
-    val incref_none : unit -> t
+
+    val none : unit -> t
     val compare : t -> t -> op -> bool
 
     val to_array : (t -> 'a) -> t -> 'a array
@@ -196,6 +238,7 @@ module PyThreadState : sig
     val clear : t -> unit
     val delete : t -> unit
     val get_dict : t -> Object.t
+    val next : t -> t
 end
 
 val new_interpreter : unit -> PyThreadState.t
@@ -264,7 +307,6 @@ val builtins : unit -> Object.t
 
 (** Evaluate a string and return the response *)
 val eval : ?globals:t -> ?locals:t -> string -> Object.t
-val none : unit -> Object.t
 val run : Object.t -> ?kwargs:(t * t) list -> t list -> Object.t
 
 val ( !$ ) : t -> Object.t

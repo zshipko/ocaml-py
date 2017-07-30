@@ -304,14 +304,6 @@ module Object = struct
     (** PyObject handle *)
     type t = pyobject
 
-    let to_pyobject (x : t) : pyobject =
-        if x = null then raise Invalid_object
-        else x
-
-    let from_pyobject (x : pyobject) : t =
-        if x = null then raise Invalid_object
-        else x
-
     let is_null x = x = null
 
     let decref = C._Py_DecRef
@@ -347,13 +339,13 @@ module Object = struct
     let from_bool b =
         wrap (C._PyBool_FromLong (if b then 1 else 0))
 
-    let none = C._Py_NoneStruct
-    let incref_none () = incref none; none
+    let _none = C._Py_NoneStruct
+    let none () = incref _none; _none
 
     let compare a b op =
         C._PyObject_RichCompareBool a b (Obj.magic op : int)
 
-    let is_none x = compare x none EQ
+    let is_none x = compare x _none EQ
 
     (* Acessing attrs/items *)
 
@@ -505,10 +497,10 @@ module PySlice = struct
 end
 
 module PyWeakref = struct
-    let new_ref ?callback:(callback=Object.incref_none ()) obj =
+    let new_ref ?callback:(callback=Object.none ()) obj =
         wrap (C._PyWeakref_NewRef obj callback)
 
-    let new_proxy ?callback:(callback=Object.incref_none ()) obj =
+    let new_proxy ?callback:(callback=Object.none ()) obj =
         wrap (C._PyWeakref_NewProxy obj callback)
 
     let get_object ref =
@@ -539,6 +531,9 @@ module PyThreadState = struct
 
     let get_dict thr =
         wrap (C._PyThreadState_GetDict thr)
+
+    let next thr =
+        C._PyThreadState_Next thr
 end
 
 let new_interpreter () =
@@ -567,7 +562,7 @@ type t =
 let rec to_object = function
     | Ptr o -> o
     | Cell c -> PyCell.create c
-    | Nil -> Object.incref_none ()
+    | Nil -> Object.none ()
     | Bool b -> Object.from_bool b
     | Int i -> PyNumber.create_int i
     | Int64 i -> PyNumber.create_int64 i
@@ -594,8 +589,6 @@ let finalize () =
 let wchar_s s =
     let s' = C._Py_DecodeLocale s null in
     Gc.finalise C._PyMem_RawFree s'; s'
-
-let none = Object.incref_none
 
 (** Initialize the Python interpreter *)
 let initialize ?initsigs:(initsigs=true) () =

@@ -197,6 +197,7 @@ let _PyThreadState_Swap = foreign ~from "PyThreadState_Swap" (thread @-> returni
 let _PyThreadState_Clear = foreign ~from "PyThreadState_Clear" (thread @-> returning void)
 let _PyThreadState_Delete = foreign ~from "PyThreadState_Delete" (thread @-> returning void)
 let _PyThreadState_GetDict = foreign ~from "PyThreadState_GetDict" (thread @-> returning pyobject)
+let _PyThreadState_Next = foreign ~from "PyThreadState_Next" (thread @-> returning thread)
 let _Py_NewInterpreter = foreign ~from "Py_NewInterpreter" (void @-> returning thread)
 let _Py_EndInterpreter = foreign ~from "Py_EndInterpreter" (thread @-> returning void)
 
