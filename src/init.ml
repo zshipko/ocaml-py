@@ -27,8 +27,6 @@ let open_lib lib =
 let from =
     try
         open_lib (Sys.getenv "OCAML_PY_VERSION")
-    with _-> try
-        open_lib "python3.4"
     with _ -> try
         open_lib "python3.5"
     with _ -> try
