@@ -18,7 +18,7 @@ If you don't use `opam` consult the [`opam`](opam) file for build instructions.
 
 If your Python installation is not in the typical location you may have to set `OCAML_PY_VERSION` to point to the Python `.so` file.
 
-To find the shared object you can run:
+For example, one way of finding this path:
 
 ```bash
 find `python3 -c "import inspect, os; print(os.path.dirname(inspect.getfile(inspect)))"` -name 'libpython*.so'
