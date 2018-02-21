@@ -14,8 +14,17 @@ py can be installed with `opam`:
 
     opam install py
 
-If you don't use `opam` consult the [`opam`](opam) file for build
-instructions.
+If you don't use `opam` consult the [`opam`](opam) file for build instructions.
+
+If your Python installation is not in the typical location you may have to set `OCAML_PY_VERSION` to point to the Python `.so` file.
+
+To find the shared object you can run:
+
+```bash
+find `python3 -c "import inspect, os; print(os.path.dirname(inspect.getfile(inspect)))"` -name 'libpython*.so'
+```
+
+(That seems to be the most straight forward way of finding it, but let me know if there's a better way)
 
 ## Introduction
 
