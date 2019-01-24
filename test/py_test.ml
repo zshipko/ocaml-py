@@ -78,6 +78,15 @@ let py_test_thread_state t =
     let _ = PyThreadState.swap a0 in
     Test.check t "Old thread state" (fun () -> eval "a" |> Object.to_int) 10
 
+let py_test_gc t =
+    List.iter (fun to_python_fn ->
+        let array = Array.init 1000 (fun i -> i * i) in
+        let tuple = !$(to_python_fn (Array.map (fun i -> Int i) array)) in
+        Gc.full_major ();
+        let array' = Object.to_array Object.to_int tuple in
+        Test.check t "Python gc test" (fun () -> array) array')
+        [(fun x -> Tuple x); (fun x -> List (Array.to_list x))]
+
 
 let simple = [
     py_test_int;
@@ -89,6 +98,7 @@ let simple = [
     py_test_iter;
     py_test_buffer;
     py_test_thread_state;
+    py_test_gc;
 ]
 
 let _ =

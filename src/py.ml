@@ -56,6 +56,7 @@ module PyList = struct
     let create l =
         let lst = C._PyList_New (List.length l |> Int64.of_int) in
         List.iteri (fun i x ->
+            C._Py_IncRef x;
             wrap_status (C._PyList_SetItem lst (Int64.of_int i) x)) l; wrap lst
 
     let insert l i v =
@@ -84,6 +85,7 @@ module PyTuple = struct
     let create l =
         let tpl = C._PyTuple_New (Array.length l |> Int64.of_int) in
         Array.iteri (fun i x ->
+            C._Py_IncRef x;
             wrap_status (C._PyTuple_SetItem tpl (Int64.of_int i) x)) l; wrap tpl
 end
 
