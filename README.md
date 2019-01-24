@@ -12,19 +12,25 @@ Homepage: https://github.com/zshipko/ocaml-py
 
 py can be installed with `opam`:
 
-    opam install py
-
-If you don't use `opam` consult the [`opam`](opam) file for build instructions.
+```shell
+$ opam install py
+```
 
 If your Python installation is not in the typical location you may have to set `OCAML_PY_VERSION` to point to the Python `.so` file.
 
 For example, one way of finding this path:
 
-```bash
-find `python3 -c "import inspect, os; print(os.path.dirname(inspect.getfile(inspect)))"` -name 'libpython*.so'
+```shell
+$ find `python3 -c "import inspect, os; print(os.path.dirname(inspect.getfile(inspect)))"` -name 'libpython*.so'
 ```
 
 (That seems to be the most straight forward way of finding it, but let me know if there's a better way)
+
+If you'd like to run the tests:
+
+```shell
+$ dune runtest
+```
 
 ## Introduction
 
@@ -74,15 +80,3 @@ Execute a string and return true/false depending on the status returned by Pytho
     if exec "import tensorflow" then
         let tf = PyModule.get "tensorflow" in  (* Load an existing module *)
         ...
-
-## Sample programs
-
-If you installed py with `opam` sample programs are located in
-the directory `opam var py:doc`.
-
-In the distribution sample programs and tests are located in the
-[`test`](test) directory. They can be built and run
-with:
-
-    topkg build --tests true && topkg test
-

@@ -32,7 +32,7 @@ let from =
     with _ -> try
         open_lib "python3.6"
     with _ -> try
-      open_lib "python3.7"
+        open_lib "python3.7"
     with _ -> try
         let proc = Unix.open_process_in "python3 -c 'import sys;print(sys.version_info.minor)'" in
         let minor_s = input_line proc in
