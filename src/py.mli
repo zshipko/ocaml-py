@@ -180,6 +180,7 @@ module PyDict : sig
     val keys : (Object.t -> 'a) -> Object.t -> 'a list
     val contains : Object.t -> Object.t -> bool
     val copy : Object.t -> Object.t
+    val clear: Object.t -> unit
     val merge : Object.t -> Object.t -> bool -> unit
 end
 

@@ -1,0 +1,9 @@
+(executable
+    (name py_test)
+    (libraries py))
+
+(alias
+    (name runtest)
+    (package py)
+    (deps py_test.exe)
+    (action (run %{dep:py_test.exe})))

@@ -1,3 +1,9 @@
+v1.1 2019-01-25
+---------------
+
+- Issue with `PyTuple_SetItem` and `PyList_SetItem` fixed by @LaurentMazare
+- Switched to dune for building
+
 v1.0 2018-02-18
 ---------------
 

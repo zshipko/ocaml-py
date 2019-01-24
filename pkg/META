@@ -1,7 +1,0 @@
-description = "OCaml interface to Python 3 using CTypes"
-version = "%%VERSION_NUM%%"
-requires = "bytes ctypes.foreign"
-archive(byte) = "py.cma"
-archive(native) = "py.cmxa"
-plugin(byte) = "py.cma"
-plugin(native) = "py.cmxs"

@@ -28,7 +28,7 @@ let py_test_dict t =
         String "c", Int 3;
     ]) in
     let d' = PyDict.items Object.to_string Object.to_int d in
-    let d' = List.sort (fun (k, v) (k', v') -> compare v v') d' in
+    let d' = List.sort (fun (_k, v) (_k', v') -> compare v v') d' in
     List.iteri (fun i (k, v) ->
         Test.check t
         "Python check dict"
