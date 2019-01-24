@@ -420,6 +420,21 @@ module Object = struct
     let concat a b =
         wrap (C._PySequence_Concat a b)
 
+    let to_c_pointer t str_option =
+        let str_or_null =
+            match str_option with
+            | Some str -> CArray.of_string str |> CArray.start
+            | None -> from_voidp char null
+        in
+        let ptr = C._PyCapsule_GetPointer t str_or_null in
+        if ptr = null
+        then
+            let err = get_python_error () in
+            let () = C._PyErr_Clear () in
+            raise err
+        else ptr
+
+
     (** Call a Python Object *)
     let call ?args:(args=PyTuple.create [||]) ?kwargs fn =
         let kw = match kwargs with

@@ -87,6 +87,27 @@ let py_test_gc t =
         Test.check t "Python gc test" (fun () -> array) array')
         [(fun x -> Tuple x); (fun x -> List (Array.to_list x))]
 
+let py_test_numpy t =
+    let np =
+        try
+            Some (PyModule.import "numpy")
+        with
+        | _ -> None
+    in
+    match np with
+    | None ->
+        (* do not run the test when numpy is not installed *)
+        ()
+    | Some np ->
+        let np_api =
+            np $. (String "core") $. (String "multiarray") $. (String "_ARRAY_API")
+        in
+        let np_api = Object.to_c_pointer np_api None in
+        let get_version_fn_typ = Foreign.funptr Ctypes.(void @-> returning uint) in
+        let get_version = Ctypes.(!@ (from_voidp get_version_fn_typ np_api)) in
+        let version = get_version () |> Unsigned.UInt.to_int in
+        (* This should be 0x01000009 for numpy 1.12.1. *)
+        Test.check t "Python numpy test" (fun () -> version > 0) true
 
 let simple = [
     py_test_int;
@@ -99,6 +120,7 @@ let simple = [
     py_test_buffer;
     py_test_thread_state;
     py_test_gc;
+    py_test_numpy;
 ]
 
 let _ =

@@ -122,6 +122,9 @@ module Object : sig
 
     (** Call a Python Object *)
     val call : ?args:t -> ?kwargs:t -> t -> t
+
+    (** Extract the C pointer from a capsule *)
+    val to_c_pointer : t -> string option -> unit Ctypes.ptr
 end
 
 val wrap : pyobject -> Object.t

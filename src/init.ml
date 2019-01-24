@@ -229,3 +229,5 @@ let _PyByteArray_AsString = foreign ~from "PyByteArray_AsString" (pyobject @-> r
 let _PyByteArray_Size = foreign ~from "PyByteArray_Size" (pyobject @-> returning int64_t)
 let _PyByteArray_FromStringAndSize = foreign ~from "PyByteArray_FromStringAndSize" (ptr char @-> int64_t @-> returning pyobject)
 let _PySlice_New = foreign ~from "PySlice_New" (pyobject @-> pyobject @-> pyobject @-> returning pyobject)
+
+let _PyCapsule_GetPointer = foreign ~from "PyCapsule_GetPointer" (pyobject @-> ptr char @-> returning (ptr void))
