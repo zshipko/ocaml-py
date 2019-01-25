@@ -325,6 +325,14 @@ val pickle : ?kwargs:(t * t) list -> Object.t -> bytes
 val unpickle : ?kwargs:(t * t) list -> bytes -> Object.t
 val print : ?kwargs:(t * t) list -> t list -> unit
 
+module Numpy : sig
+    val is_available : unit -> bool
+    val shape : pyobject -> int list
+    val get_version : unit -> int
+    val array_new : unit -> Object.t
+    val numpy_to_bigarray : pyobject -> ('a, 'b) Bigarray.kind -> ('a, 'b, Bigarray.c_layout) Bigarray.Genarray.t
+end
+
 (*---------------------------------------------------------------------------
    Copyright (c) 2017 Zach Shipko
 

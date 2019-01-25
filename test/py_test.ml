@@ -88,17 +88,9 @@ let py_test_gc t =
         [(fun x -> Tuple x); (fun x -> List (Array.to_list x))]
 
 let py_test_numpy t =
-    let np =
-        try
-            Some (PyModule.import "numpy")
-        with
-        | _ -> None
-    in
-    match np with
-    | None ->
-        (* do not run the test when numpy is not installed *)
-        ()
-    | Some np ->
+    if Numpy.is_available ()
+    then (
+        let np = PyModule.import "numpy" in
         let np_api =
             np $. (String "core") $. (String "multiarray") $. (String "_ARRAY_API")
         in
@@ -106,8 +98,17 @@ let py_test_numpy t =
         let get_version_fn_typ = Foreign.funptr Ctypes.(void @-> returning uint) in
         let get_version = Ctypes.(!@ (from_voidp get_version_fn_typ np_api)) in
         let version = get_version () |> Unsigned.UInt.to_int in
+        let version' = Numpy.get_version () in
         (* This should be 0x01000009 for numpy 1.12.1. *)
-        Test.check t "Python numpy test" (fun () -> version > 0) true
+        Test.check t "Python numpy test" (fun () -> version) version';
+        let v = np $. (String "zeros") $ [ Int 5 ] in
+        Printf.printf "> %s\n%!" (Object.to_string v);
+        let ba = Numpy.numpy_to_bigarray v Float64 in
+        Bigarray.Genarray.set ba [| 1 |] 0.25;
+        Printf.printf "> %s\n%!" (Object.to_string v);
+        let v = Numpy.array_new () in
+        Printf.printf ">>>> %s\n%!" (Object.to_string v)
+    )
 
 let simple = [
     py_test_int;
