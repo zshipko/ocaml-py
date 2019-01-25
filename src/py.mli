@@ -329,8 +329,10 @@ module Numpy : sig
     val is_available : unit -> bool
     val shape : pyobject -> int list
     val get_version : unit -> int
-    val array_new : unit -> Object.t
-    val numpy_to_bigarray : pyobject -> ('a, 'b) Bigarray.kind -> ('a, 'b, Bigarray.c_layout) Bigarray.Genarray.t
+    val numpy_to_bigarray :
+        pyobject ->
+        ('a, 'b) Bigarray.kind ->
+        ('a, 'b, Bigarray.c_layout) Bigarray.Genarray.t
 end
 
 (*---------------------------------------------------------------------------

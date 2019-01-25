@@ -91,23 +91,18 @@ let py_test_numpy t =
     if Numpy.is_available ()
     then (
         let np = PyModule.import "numpy" in
-        let np_api =
-            np $. (String "core") $. (String "multiarray") $. (String "_ARRAY_API")
-        in
-        let np_api = Object.to_c_pointer np_api None in
-        let get_version_fn_typ = Foreign.funptr Ctypes.(void @-> returning uint) in
-        let get_version = Ctypes.(!@ (from_voidp get_version_fn_typ np_api)) in
-        let version = get_version () |> Unsigned.UInt.to_int in
-        let version' = Numpy.get_version () in
         (* This should be 0x01000009 for numpy 1.12.1. *)
-        Test.check t "Python numpy test" (fun () -> version) version';
-        let v = np $. (String "zeros") $ [ Int 5 ] in
-        Printf.printf "> %s\n%!" (Object.to_string v);
-        let ba = Numpy.numpy_to_bigarray v Float64 in
-        Bigarray.Genarray.set ba [| 1 |] 0.25;
-        Printf.printf "> %s\n%!" (Object.to_string v);
-        let v = Numpy.array_new () in
-        Printf.printf ">>>> %s\n%!" (Object.to_string v)
+        let version = Numpy.get_version () in
+        Test.check t "Python numpy version test" (fun () -> version > 0) true;
+        let zeros = np $. String "zeros" $ [ Int 5 ] in
+        let bigarray = Numpy.numpy_to_bigarray zeros Float64 in
+        (* The numpy array and the bigarray share memory so modifying the
+           bigarray also changes the numpy array.
+        *)
+        Bigarray.Genarray.set bigarray [| 1 |] 0.25;
+        Bigarray.Genarray.set bigarray [| 4 |] 0.5;
+        let sum = zeros $. String "sum" $ [] in
+        Test.check t "Python numpy bigarray" (fun () -> Object.to_float sum) 0.75
     )
 
 let simple = [
