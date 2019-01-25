@@ -122,6 +122,9 @@ module Object : sig
 
     (** Call a Python Object *)
     val call : ?args:t -> ?kwargs:t -> t -> t
+
+    (** Extract the C pointer from a capsule *)
+    val to_c_pointer : t -> string option -> unit Ctypes.ptr
 end
 
 val wrap : pyobject -> Object.t
@@ -321,6 +324,22 @@ val prepend_path : string list -> unit
 val pickle : ?kwargs:(t * t) list -> Object.t -> bytes
 val unpickle : ?kwargs:(t * t) list -> bytes -> Object.t
 val print : ?kwargs:(t * t) list -> t list -> unit
+
+module Numpy : sig
+    val is_available : unit -> bool
+    val shape : pyobject -> int list
+    val get_version : unit -> int
+
+    (* Return a bigarray based on some numpy array by sharing memory between
+       the two.
+       This raises if the provided kind is not compatible with the numpy
+       array element types or if the numpy array is not C contiguous.
+    *)
+    val numpy_to_bigarray :
+        pyobject ->
+        ('a, 'b) Bigarray.kind ->
+        ('a, 'b, Bigarray.c_layout) Bigarray.Genarray.t
+end
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2017 Zach Shipko

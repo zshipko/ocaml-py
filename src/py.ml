@@ -420,6 +420,21 @@ module Object = struct
     let concat a b =
         wrap (C._PySequence_Concat a b)
 
+    let to_c_pointer t str_option =
+        let str_or_null =
+            match str_option with
+            | Some str -> CArray.of_string str |> CArray.start
+            | None -> from_voidp char null
+        in
+        let ptr = C._PyCapsule_GetPointer t str_or_null in
+        if ptr = null
+        then
+            let err = get_python_error () in
+            let () = C._PyErr_Clear () in
+            raise err
+        else ptr
+
+
     (** Call a Python Object *)
     let call ?args:(args=PyTuple.create [||]) ?kwargs fn =
         let kw = match kwargs with
@@ -667,5 +682,86 @@ let unpickle ?kwargs b =
 let print ?kwargs args =
     run (eval "print") args ?kwargs
     |> ignore
+
+module Numpy = struct
+    let shape pyobject =
+        Object.to_list Object.to_int (pyobject $. (String "shape"))
+
+    type t = {
+        get_version : unit -> Unsigned.uint;
+        get_ptr : pyobject -> Intptr.t Ctypes_static.ptr -> unit Ctypes_static.ptr;
+        object_type : pyobject -> int -> int;
+        np : pyobject;
+    }
+
+    let is_available () =
+        try
+            let _ = PyModule.import "numpy" in
+            true
+        with _ -> false
+
+    let init () =
+        let np = PyModule.import "numpy" in
+        let np_api =
+            np $. String "core" $. String "multiarray" $. String "_ARRAY_API"
+        in
+        let np_api = Object.to_c_pointer np_api None in
+        (* See [numpy/__multiarray_api.h] for the offset values. *)
+        let ptr_offset ~offset =
+            Ctypes.(to_voidp (from_voidp (ptr void) np_api +@ offset))
+        in
+        let fn fn_typ ~offset =
+            Ctypes.(!@ (from_voidp (Foreign.funptr fn_typ) (ptr_offset ~offset)))
+        in
+        let get_version = fn Ctypes.(void @-> returning uint) ~offset:0 in
+        let get_ptr =
+          Ctypes.(pyobject @-> ptr intptr_t @-> returning (ptr void))
+          |> fn ~offset:160
+        in
+        let object_type =
+            Ctypes.(ptr void @-> int @-> returning int) |> fn ~offset:54
+        in
+        { get_version; get_ptr; object_type; np }
+
+    let t = lazy (init ())
+
+    let get_version () = (Lazy.force t).get_version () |> Unsigned.UInt.to_int
+
+    let numpy_to_bigarray : type a b . pyobject -> (a, b) Bigarray.kind -> (a, b, Bigarray.c_layout) Bigarray.Genarray.t = fun pyobject kind ->
+        let t = Lazy.force t in
+        if not (Object.to_bool (pyobject $. String "flags" $. String "c_contiguous"))
+        then failwith "the input array is not C contiguous";
+        let shape = shape pyobject in
+        let zeros =
+            List.map (fun _ -> Intptr.of_int 0) shape
+            |> CArray.of_list intptr_t
+            |> CArray.start
+        in
+        let typeinfo = t.object_type pyobject 0 in
+        let typ : a typ =
+            (* The typeinfo values come from the NPY_TYPES order in
+               numpy/ndarraytypes.h. *)
+            match kind, typeinfo with
+            | Bigarray.Float32, 11 -> float
+            | Bigarray.Float64, 12 -> float
+            | Bigarray.Int8_signed, 1 -> int
+            | Bigarray.Int8_unsigned, 2 -> int
+            | Bigarray.Int16_signed, 3 -> int
+            | Bigarray.Int16_unsigned, 4 -> int
+            | Bigarray.Int32, (5 | 7) -> int32_t
+            | Bigarray.Int64, 9 -> int64_t
+            | Bigarray.Int, _ -> failwith "int is not supported"
+            | Bigarray.Nativeint, _ -> failwith "native int is not supported"
+            | Bigarray.Complex32, _ -> failwith "complex32 is not supported"
+            | Bigarray.Complex64, _ -> failwith "complex64 is not supported"
+            | Bigarray.Char, _ -> char
+            | _ -> Printf.sprintf "incompatible numpy array type %d" typeinfo |> failwith
+        in
+        let ptr = t.get_ptr pyobject zeros |> from_voidp typ in
+        let bigarray = bigarray_of_ptr Genarray (Array.of_list shape) kind ptr in
+        C._Py_IncRef pyobject;
+        Gc.finalise (fun _ -> C._Py_DecRef pyobject) bigarray;
+        bigarray
+end
 
 let () = initialize ()

@@ -87,6 +87,23 @@ let py_test_gc t =
         Test.check t "Python gc test" (fun () -> array) array')
         [(fun x -> Tuple x); (fun x -> List (Array.to_list x))]
 
+let py_test_numpy t =
+    if Numpy.is_available ()
+    then (
+        let np = PyModule.import "numpy" in
+        (* This should be 0x01000009 for numpy 1.12.1. *)
+        let version = Numpy.get_version () in
+        Test.check t "Python numpy version test" (fun () -> version > 0) true;
+        let zeros = np $. String "zeros" $ [ Int 5 ] in
+        let bigarray = Numpy.numpy_to_bigarray zeros Float64 in
+        (* The numpy array and the bigarray share memory so modifying the
+           bigarray also changes the numpy array.
+        *)
+        Bigarray.Genarray.set bigarray [| 1 |] 0.25;
+        Bigarray.Genarray.set bigarray [| 4 |] 0.5;
+        let sum = zeros $. String "sum" $ [] in
+        Test.check t "Python numpy bigarray" (fun () -> Object.to_float sum) 0.75
+    )
 
 let simple = [
     py_test_int;
@@ -99,6 +116,7 @@ let simple = [
     py_test_buffer;
     py_test_thread_state;
     py_test_gc;
+    py_test_numpy;
 ]
 
 let _ =
