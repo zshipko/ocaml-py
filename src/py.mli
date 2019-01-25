@@ -333,7 +333,7 @@ module Numpy : sig
     (* Return a bigarray based on some numpy array by sharing memory between
        the two.
        This raises if the provided kind is not compatible with the numpy
-       array element types.
+       array element types or if the numpy array is not C contiguous.
     *)
     val numpy_to_bigarray :
         pyobject ->

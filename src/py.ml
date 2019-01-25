@@ -691,6 +691,7 @@ module Numpy = struct
         get_version : unit -> Unsigned.uint;
         get_ptr : pyobject -> Intptr.t Ctypes_static.ptr -> unit Ctypes_static.ptr;
         object_type : pyobject -> int -> int;
+        np : pyobject;
     }
 
     let is_available () =
@@ -720,7 +721,7 @@ module Numpy = struct
         let object_type =
             Ctypes.(ptr void @-> int @-> returning int) |> fn ~offset:54
         in
-        { get_version; get_ptr; object_type }
+        { get_version; get_ptr; object_type; np }
 
     let t = lazy (init ())
 
@@ -728,6 +729,8 @@ module Numpy = struct
 
     let numpy_to_bigarray : type a b . pyobject -> (a, b) Bigarray.kind -> (a, b, Bigarray.c_layout) Bigarray.Genarray.t = fun pyobject kind ->
         let t = Lazy.force t in
+        if not (Object.to_bool (pyobject $. String "flags" $. String "c_contiguous"))
+        then failwith "the input array is not C contiguous";
         let shape = shape pyobject in
         let zeros =
             List.map (fun _ -> Intptr.of_int 0) shape
