@@ -93,7 +93,7 @@ let py_test_numpy t =
         let np = PyModule.import "numpy" in
         (* This should be 0x01000009 for numpy 1.12.1. *)
         let version = Numpy.get_version () in
-        Test.check t "Python numpy version test" (fun () -> version > 0) true;
+        Test.check t "numpy version test" (fun () -> version > 0) true;
         let zeros = np $. String "zeros" $ [ Int 5 ] in
         let bigarray = Numpy.numpy_to_bigarray zeros Float64 in
         (* The numpy array and the bigarray share memory so modifying the
@@ -102,7 +102,20 @@ let py_test_numpy t =
         Bigarray.Genarray.set bigarray [| 1 |] 0.25;
         Bigarray.Genarray.set bigarray [| 4 |] 0.5;
         let sum = zeros $. String "sum" $ [] in
-        Test.check t "Python numpy bigarray" (fun () -> Object.to_float sum) 0.75
+        Test.check t "numpy to bigarray" (fun () -> Object.to_float sum) 0.75;
+        let bigarray =
+            Bigarray.Array2.of_array Float32 C_layout
+                [| [| 3.; 1.; 4.; 1. |]; [| 1.; 5.; 9.; 2. |] |]
+            |> Bigarray.genarray_of_array2
+        in
+        let na = Numpy.bigarray_to_numpy bigarray in
+        Test.check t "bigarray to numpy" (fun () -> Numpy.shape na)
+            (Bigarray.Genarray.dims bigarray |> Array.to_list);
+        let sum = na $. String "sum" $ [] in
+        Test.check t "bigarray to numpy 2" (fun () -> Object.to_float sum) 26.;
+        let _ = na $. String "fill" $ [ Float 3.14 ] in
+        Test.check t "bigarray to numpy 3"
+            (fun () -> (Bigarray.Genarray.get bigarray [| 1; 1 |] -. 3.14) < 1e-6) true
     )
 
 let simple = [

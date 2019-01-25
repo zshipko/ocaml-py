@@ -684,13 +684,19 @@ let print ?kwargs args =
     |> ignore
 
 module Numpy = struct
+    (* Define some type aliases to match the numpy conventions. *)
+    let npy_intp = intptr_t
+    type npy_intp = Intptr.t
+
     let shape pyobject =
         Object.to_list Object.to_int (pyobject $. (String "shape"))
 
     type t = {
         get_version : unit -> Unsigned.uint;
-        get_ptr : pyobject -> Intptr.t Ctypes_static.ptr -> unit Ctypes_static.ptr;
+        get_ptr : pyobject -> npy_intp ptr -> unit ptr;
         object_type : pyobject -> int -> int;
+        new_array : pyobject -> int -> npy_intp ptr -> int -> npy_intp ptr -> unit ptr -> int -> int -> pyobject -> pyobject;
+        array_type : pyobject;
         np : pyobject;
     }
 
@@ -707,21 +713,30 @@ module Numpy = struct
         in
         let np_api = Object.to_c_pointer np_api None in
         (* See [numpy/__multiarray_api.h] for the offset values. *)
-        let ptr_offset ~offset =
-            Ctypes.(to_voidp (from_voidp (ptr void) np_api +@ offset))
-        in
+        let ptr_offset ~offset = to_voidp (from_voidp (ptr void) np_api +@ offset) in
         let fn fn_typ ~offset =
-            Ctypes.(!@ (from_voidp (Foreign.funptr fn_typ) (ptr_offset ~offset)))
+            !@ (from_voidp (Foreign.funptr fn_typ) (ptr_offset ~offset))
         in
-        let get_version = fn Ctypes.(void @-> returning uint) ~offset:0 in
+        let get_version = fn (void @-> returning uint) ~offset:0 in
         let get_ptr =
-          Ctypes.(pyobject @-> ptr intptr_t @-> returning (ptr void))
-          |> fn ~offset:160
+            fn (pyobject @-> ptr npy_intp @-> returning (ptr void)) ~offset:160
         in
-        let object_type =
-            Ctypes.(ptr void @-> int @-> returning int) |> fn ~offset:54
+        let object_type = fn (ptr void @-> int @-> returning int) ~offset:54 in
+        let array_type = !@(from_voidp (ptr void) (ptr_offset ~offset:2)) in
+        let new_array =
+            (pyobject @->        (* subtype  *)
+                int @->          (* ndims    *)
+                ptr npy_intp @-> (* dims     *)
+                int @->          (* type_num *)
+                ptr npy_intp @-> (* strides  *)
+                ptr void @->     (* data     *)
+                int @->          (* itemsize *)
+                int @->          (* flags    *)
+                pyobject @->     (* obj      *)
+                returning pyobject)
+            |> fn ~offset:93
         in
-        { get_version; get_ptr; object_type; np }
+        { get_version; get_ptr; object_type; new_array; array_type; np }
 
     let t = lazy (init ())
 
@@ -734,7 +749,7 @@ module Numpy = struct
         let shape = shape pyobject in
         let zeros =
             List.map (fun _ -> Intptr.of_int 0) shape
-            |> CArray.of_list intptr_t
+            |> CArray.of_list npy_intp
             |> CArray.start
         in
         let typeinfo = t.object_type pyobject 0 in
@@ -762,6 +777,45 @@ module Numpy = struct
         C._Py_IncRef pyobject;
         Gc.finalise (fun _ -> C._Py_DecRef pyobject) bigarray;
         bigarray
+
+    let bigarray_to_numpy (type a) (type b) (bigarray : (a, b, Bigarray.c_layout) Bigarray.Genarray.t) =
+        let t = Lazy.force t in
+        let ndims = Bigarray.Genarray.num_dims bigarray in
+        let dims =
+            Bigarray.Genarray.dims bigarray
+            |> Array.to_list
+            |> List.map Intptr.of_int
+            |> CArray.of_list npy_intp
+            |> CArray.start
+        in
+        let typeinfo =
+            match Bigarray.Genarray.kind bigarray with
+            | Bigarray.Float32        -> 11
+            | Bigarray.Float64        -> 12
+            | Bigarray.Int8_signed    -> 1
+            | Bigarray.Int8_unsigned  -> 2
+            | Bigarray.Int16_signed   -> 3
+            | Bigarray.Int16_unsigned -> 4
+            | Bigarray.Int32          -> 5
+            | Bigarray.Int64          -> 9
+            | Bigarray.Int            -> failwith "int is not supported"
+            | Bigarray.Nativeint      -> failwith "native int is not supported"
+            | Bigarray.Complex32      -> failwith "complex32 is not supported"
+            | Bigarray.Complex64      -> failwith "complex64 is not supported"
+            | Bigarray.Char           -> failwith "char is not supported"
+        in
+        let data = bigarray_start Genarray bigarray |> to_voidp in
+        let pyobject =
+            (* NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_WRITEABLE *)
+            let flag = 0x0001 lor 0x0100 lor 0x0400 in
+            t.new_array t.array_type ndims dims typeinfo (from_voidp npy_intp null) data 0 flag null
+            |> wrap
+        in
+        (* Ensure that the bigarray can only be collected after the numpy array. Use
+           [Sys.opaque_identity] for this as it cannot be optimized.
+        *)
+        Gc.finalise (fun _ -> ignore (Sys.opaque_identity bigarray)) pyobject;
+        pyobject
 end
 
 let () = initialize ()

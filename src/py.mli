@@ -339,6 +339,12 @@ module Numpy : sig
         pyobject ->
         ('a, 'b) Bigarray.kind ->
         ('a, 'b, Bigarray.c_layout) Bigarray.Genarray.t
+
+    (* Return a numpy array based on a bigarray by sharing memory between the
+       two.
+    *)
+    val bigarray_to_numpy :
+        ('a, 'b, Bigarray.c_layout) Bigarray.Genarray.t -> pyobject
 end
 
 (*---------------------------------------------------------------------------
