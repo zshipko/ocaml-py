@@ -689,7 +689,7 @@ module Numpy = struct
 
     type t = {
         get_version : unit -> Unsigned.uint;
-        get_ptr : pyobject -> Intptr.t Ctypes_static.ptr -> unit Ctypes_static.ptr;
+        get_ptr : pyobject -> Intptr.t ptr -> unit ptr;
         object_type : pyobject -> int -> int;
         np : pyobject;
     }
@@ -707,20 +707,15 @@ module Numpy = struct
         in
         let np_api = Object.to_c_pointer np_api None in
         (* See [numpy/__multiarray_api.h] for the offset values. *)
-        let ptr_offset ~offset =
-            Ctypes.(to_voidp (from_voidp (ptr void) np_api +@ offset))
-        in
+        let ptr_offset ~offset = to_voidp (from_voidp (ptr void) np_api +@ offset) in
         let fn fn_typ ~offset =
-            Ctypes.(!@ (from_voidp (Foreign.funptr fn_typ) (ptr_offset ~offset)))
+            !@ (from_voidp (Foreign.funptr fn_typ) (ptr_offset ~offset))
         in
-        let get_version = fn Ctypes.(void @-> returning uint) ~offset:0 in
+        let get_version = fn (void @-> returning uint) ~offset:0 in
         let get_ptr =
-          Ctypes.(pyobject @-> ptr intptr_t @-> returning (ptr void))
-          |> fn ~offset:160
+            fn (pyobject @-> ptr intptr_t @-> returning (ptr void)) ~offset:160
         in
-        let object_type =
-            Ctypes.(ptr void @-> int @-> returning int) |> fn ~offset:54
-        in
+        let object_type = fn (ptr void @-> int @-> returning int) ~offset:54 in
         { get_version; get_ptr; object_type; np }
 
     let t = lazy (init ())
