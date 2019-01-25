@@ -329,6 +329,12 @@ module Numpy : sig
     val is_available : unit -> bool
     val shape : pyobject -> int list
     val get_version : unit -> int
+
+    (* Return a bigarray based on some numpy array by sharing memory between
+       the two.
+       This raises if the provided kind is not compatible with the numpy
+       array element types.
+    *)
     val numpy_to_bigarray :
         pyobject ->
         ('a, 'b) Bigarray.kind ->
