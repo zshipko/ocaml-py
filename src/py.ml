@@ -699,29 +699,30 @@ module Numpy = struct
             true
         with _ -> false
 
-    let t =
-        lazy (
-            let np = PyModule.import "numpy" in
-            let np_api =
-                np $. String "core" $. String "multiarray" $. String "_ARRAY_API"
-            in
-            let np_api = Object.to_c_pointer np_api None in
-            (* See [numpy/__multiarray_api.h] for the offset values. *)
-            let ptr_offset ~offset =
-                Ctypes.(to_voidp (from_voidp (ptr void) np_api +@ offset))
-            in
-            let fn fn_typ ~offset =
-                Ctypes.(!@ (from_voidp (Foreign.funptr fn_typ) (ptr_offset ~offset)))
-            in
-            let get_version = fn Ctypes.(void @-> returning uint) ~offset:0 in
-            let get_ptr =
-              Ctypes.(pyobject @-> ptr intptr_t @-> returning (ptr void))
-              |> fn ~offset:160
-            in
-            let object_type =
-                Ctypes.(ptr void @-> int @-> returning int) |> fn ~offset:54
-            in
-            { get_version; get_ptr; object_type })
+    let init () =
+        let np = PyModule.import "numpy" in
+        let np_api =
+            np $. String "core" $. String "multiarray" $. String "_ARRAY_API"
+        in
+        let np_api = Object.to_c_pointer np_api None in
+        (* See [numpy/__multiarray_api.h] for the offset values. *)
+        let ptr_offset ~offset =
+            Ctypes.(to_voidp (from_voidp (ptr void) np_api +@ offset))
+        in
+        let fn fn_typ ~offset =
+            Ctypes.(!@ (from_voidp (Foreign.funptr fn_typ) (ptr_offset ~offset)))
+        in
+        let get_version = fn Ctypes.(void @-> returning uint) ~offset:0 in
+        let get_ptr =
+          Ctypes.(pyobject @-> ptr intptr_t @-> returning (ptr void))
+          |> fn ~offset:160
+        in
+        let object_type =
+            Ctypes.(ptr void @-> int @-> returning int) |> fn ~offset:54
+        in
+        { get_version; get_ptr; object_type }
+
+    let t = lazy (init ())
 
     let get_version () = (Lazy.force t).get_version () |> Unsigned.UInt.to_int
 
