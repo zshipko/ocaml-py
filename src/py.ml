@@ -806,7 +806,9 @@ module Numpy = struct
         in
         let data = bigarray_start Genarray bigarray |> to_voidp in
         let pyobject =
-            t.new_array t.array_type ndims dims typeinfo (from_voidp npy_intp null) data 0 1081 null
+            (* NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_WRITEABLE *)
+            let flag = 0x0001 lor 0x0100 lor 0x0400 in
+            t.new_array t.array_type ndims dims typeinfo (from_voidp npy_intp null) data 0 flag null
             |> wrap
         in
         (* Ensure that the bigarray can only be collected after the numpy array. Use
