@@ -1,7 +1,8 @@
-v1.1 2019-01-25
+v1.1
 ---------------
 
 - Issue with `PyTuple_SetItem` and `PyList_SetItem` fixed by @LaurentMazare
+- Numpy array/Bigarray conversion added by @LaurentMazare
 - Switched to dune for building
 
 v1.0 2018-02-18

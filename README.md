@@ -21,10 +21,10 @@ If your Python installation is not in the typical location you may have to set `
 For example, one way of finding this path:
 
 ```shell
-$ find `python3 -c "import inspect, os; print(os.path.dirname(inspect.getfile(inspect)))"` -name 'libpython*.so'
+$ find `python3 -c 'import sys, os; print(os.path.join(sys.prefix, "lib"))'` -name 'libpython*.so'
 ```
 
-(That seems to be the most straight forward way of finding it, but let me know if there's a better way)
+(That seems to be the most straight forward way, but let me know if there's something better!)
 
 If you'd like to run the tests:
 
