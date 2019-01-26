@@ -28,7 +28,7 @@ let from =
     try (* First see if the OCAML_PY_VERSION environment variable is set *)
         open_lib (Sys.getenv "OCAML_PY_VERSION")
     with _ -> try (* Next try to query the python3 executable *)
-        let proc = Unix.open_process_in "python3 -c 'import sys, os, glob; print(glob.glob(os.path.join(sys.prefix, \"lib\",\"libpython*.so*\"))[0])'" in
+        let proc = Unix.open_process_in "python3 -c 'import sys, os, glob; print(glob.glob(os.path.join(sys.prefix, \"lib\",\"libpython*.so*\"))[0])' 2> /dev/null" in
         let line = input_line proc in
         let _ = close_in proc in
         open_lib line
@@ -40,6 +40,12 @@ let from =
         open_lib "python3.7"
     with _ -> try
         open_lib "python3.8"
+    with _ -> try
+        let proc = Unix.open_process_in "python3 -c 'import sys;print(sys.version_info.minor)'" in
+        let minor_s = input_line proc in
+        let _ = close_in proc in
+        let filename = "python3." ^ minor_s in
+        open_lib filename
     with _ -> raise Python_not_found
 
 let _Py_NoneStruct = foreign_value ~from "_Py_NoneStruct" void
