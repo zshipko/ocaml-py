@@ -76,7 +76,11 @@ let py_test_thread_state t =
     let _ = exec "a = 5" in
     let _ = Test.check t "New thread state" (fun () -> eval "a" |> Object.to_int) 5 in
     let _ = PyThreadState.swap a0 in
-    Test.check t "Old thread state" (fun () -> eval "a" |> Object.to_int) 10
+    Test.check t "Old thread state" (fun () -> eval "a" |> Object.to_int) 10;
+    let a1 = new_interpreter () in
+    end_interpreter a1;
+    let _ = PyThreadState.swap a0 in
+    ()
 
 let py_test_gc t =
     List.iter (fun to_python_fn ->
