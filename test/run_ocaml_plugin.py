@@ -19,6 +19,7 @@ import testmod
 
 print('Module imported has been imported.')
 print(testmod.foobar)
+print(testmod.pi)
 
 print('All good, shutting down the ocaml runtime.')
 dll.caml_shutdown()

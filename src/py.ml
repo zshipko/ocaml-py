@@ -499,6 +499,12 @@ module PyModule = struct
     let reload m =
         wrap (C._PyImport_ReloadModule m)
 
+    let add_int m name v =
+        wrap_status (C._PyModuleAddIntConstant m name v)
+
+    let add_string m name v =
+        wrap_status (C._PyModuleAddStringConstant m name v)
+
     let main () =
         get "__main__"
 end

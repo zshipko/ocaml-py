@@ -112,6 +112,8 @@ let _PyErr_Occurred = foreign ~from "PyErr_Occurred" (void @-> returning int)
 
 (* Module *)
 let _PyModule_GetDict = foreign ~from "PyModule_GetDict" (pyobject @-> returning pyobject)
+let _PyModuleAddIntConstant = foreign ~from "PyModule_AddIntConstant" (pyobject @-> string @-> int @-> returning int)
+let _PyModuleAddStringConstant = foreign ~from "PyModule_AddStringConstant" (pyobject @-> string @-> string @-> returning int)
 let _PyImport_AddModule = foreign ~from "PyImport_AddModule" (string @-> returning pyobject)
 let _PyImport_Import = foreign ~from "PyImport_Import" (pyobject @-> returning pyobject)
 let _PyImport_ReloadModule = foreign ~from "PyImport_ReloadModule" (pyobject @-> returning pyobject)
