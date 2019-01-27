@@ -95,7 +95,7 @@ let py_test_numpy t =
         let version = Numpy.get_version () in
         Test.check t "numpy version test" (fun () -> version > 0) true;
         let zeros = np $. String "zeros" $ [ Int 5 ] in
-        let bigarray = Numpy.numpy_to_bigarray zeros Float64 in
+        let bigarray = Numpy.to_bigarray zeros Float64 in
         (* The numpy array and the bigarray share memory so modifying the
            bigarray also changes the numpy array.
         *)
@@ -108,7 +108,7 @@ let py_test_numpy t =
                 [| [| 3.; 1.; 4.; 1. |]; [| 1.; 5.; 9.; 2. |] |]
             |> Bigarray.genarray_of_array2
         in
-        let na = Numpy.bigarray_to_numpy bigarray in
+        let na = Numpy.from_bigarray bigarray in
         Test.check t "bigarray to numpy" (fun () -> Numpy.shape na)
             (Bigarray.Genarray.dims bigarray |> Array.to_list);
         let sum = na $. String "sum" $ [] in

@@ -335,7 +335,7 @@ module Numpy : sig
        This raises if the provided kind is not compatible with the numpy
        array element types or if the numpy array is not C contiguous.
     *)
-    val numpy_to_bigarray :
+    val to_bigarray :
         pyobject ->
         ('a, 'b) Bigarray.kind ->
         ('a, 'b, Bigarray.c_layout) Bigarray.Genarray.t
@@ -343,7 +343,7 @@ module Numpy : sig
     (* Return a numpy array based on a bigarray by sharing memory between the
        two.
     *)
-    val bigarray_to_numpy :
+    val from_bigarray :
         ('a, 'b, Bigarray.c_layout) Bigarray.Genarray.t -> pyobject
 end
 

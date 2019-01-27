@@ -742,7 +742,7 @@ module Numpy = struct
 
     let get_version () = (Lazy.force t).get_version () |> Unsigned.UInt.to_int
 
-    let numpy_to_bigarray : type a b . pyobject -> (a, b) Bigarray.kind -> (a, b, Bigarray.c_layout) Bigarray.Genarray.t = fun pyobject kind ->
+    let to_bigarray : type a b . pyobject -> (a, b) Bigarray.kind -> (a, b, Bigarray.c_layout) Bigarray.Genarray.t = fun pyobject kind ->
         let t = Lazy.force t in
         if not (Object.to_bool (pyobject $. String "flags" $. String "c_contiguous"))
         then failwith "the input array is not C contiguous";
@@ -778,7 +778,7 @@ module Numpy = struct
         Gc.finalise (fun _ -> C._Py_DecRef pyobject) bigarray;
         bigarray
 
-    let bigarray_to_numpy (type a) (type b) (bigarray : (a, b, Bigarray.c_layout) Bigarray.Genarray.t) =
+    let from_bigarray (type a) (type b) (bigarray : (a, b, Bigarray.c_layout) Bigarray.Genarray.t) =
         let t = Lazy.force t in
         let ndims = Bigarray.Genarray.num_dims bigarray in
         let dims =
