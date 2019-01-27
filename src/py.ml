@@ -505,6 +505,9 @@ module PyModule = struct
     let add_string m name v =
         wrap_status (C._PyModuleAddStringConstant m name v)
 
+    let add_object m name obj =
+        wrap_status (C._PyModuleAddObject m name obj)
+
     let main () =
         get "__main__"
 end
