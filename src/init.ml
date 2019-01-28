@@ -119,6 +119,8 @@ let _PyRun_StringFlags = foreign ~from "PyRun_StringFlags" (string @-> int @-> p
 let _PyErr_Clear = foreign ~from "PyErr_Clear" (void @-> returning void)
 let _PyErr_Fetch = foreign ~from "PyErr_Fetch" (ptr pyobject @-> ptr pyobject @-> ptr pyobject @-> returning int)
 let _PyErr_Occurred = foreign ~from "PyErr_Occurred" (void @-> returning int)
+let _PyErr_SetString = foreign ~from "PyErr_SetString" (pyobject @-> string @-> returning void)
+let _PyExc_RuntimeError = foreign_value ~from "PyExc_RuntimeError" pyobject
 
 (* Module *)
 let _PyModule_GetDict = foreign ~from "PyModule_GetDict" (pyobject @-> returning pyobject)
@@ -262,5 +264,9 @@ let pymethod = ptr _Py_method
 
 let _PyCFunction_New =
   foreign ~from "PyCFunction_NewEx" (pymethod @-> pyobject @-> pyobject @-> returning pyobject)
+
+let _PyCapsule_New =
+  foreign ~from "PyCapsule_New" (ptr void @-> ptr char @->
+    (Foreign.funptr (pyobject @-> returning void)) @-> returning pyobject)
 
 let _PyCapsule_GetPointer = foreign ~from "PyCapsule_GetPointer" (pyobject @-> ptr char @-> returning (ptr void))

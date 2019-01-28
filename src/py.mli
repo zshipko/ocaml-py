@@ -364,6 +364,8 @@ module CamlModule : sig
     val add_string : t -> string -> string -> unit
     val add_object : t -> string -> pyvalue -> unit
     val add_fn : t -> string -> (Object.t -> pyvalue) -> unit
+
+    val capsule_wrapper : unit -> ('a -> Object.t) * (Object.t -> 'a)
 end
 
 (*---------------------------------------------------------------------------

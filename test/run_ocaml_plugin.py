@@ -28,5 +28,17 @@ import testmod
 print(testmod.foobar)
 print(testmod.pi)
 print(testmod.e)
-for i in range(10):
+for i in range(1, 10):
   print(testmod.fn(i))
+
+# OCaml errors should be nicely wrapped in Python.
+try:
+  testmod.fn(0)
+except Exception as e:
+  print('ocaml failed: ' + str(e))
+
+capsule = testmod.build()
+testmod.increment(capsule)
+testmod.increment(capsule)
+testmod.increment(capsule)
+print(testmod.get(capsule))
