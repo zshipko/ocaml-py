@@ -21,6 +21,7 @@ depexts: [
 	[["ubuntu"] ["python3-dev"]]
 	[["fedora"] ["python3-devel"]]
 	[["alpine"] ["python3-dev"]]
+  [["macos"] ["python3"]]
 ]
 
 build:
