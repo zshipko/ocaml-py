@@ -17,11 +17,11 @@ depends:
 ]
 
 depexts: [
-	[["debian"] ["python3-dev"]]
-	[["ubuntu"] ["python3-dev"]]
-	[["fedora"] ["python3-devel"]]
-	[["alpine"] ["python3-dev"]]
-  [["macos"] ["python3"]]
+  ["python3-dev"] {os-distribution = "debian"}
+  ["python3-dev"] {os-distribution = "ubuntu"}
+  ["python3-devel"] {os-distribution = "fedora"}
+  ["python3-dev"] {os-distribution = "alpine"}
+  ["python3"] {os = "macos" & os-distribution = "homebrew"}
 ]
 
 build:
