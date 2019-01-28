@@ -6,7 +6,7 @@ exception Invalid_object
 exception Python_error of string
 exception End_iteration
 
-let initialized = ref false
+let initialized = ref already_initialized
 
 type op =
     | LT
@@ -492,6 +492,15 @@ module PyModule = struct
 
     let reload m =
         wrap (C._PyImport_ReloadModule m)
+
+    let add_int m name v =
+        wrap_status (C._PyModuleAddIntConstant m name v)
+
+    let add_string m name v =
+        wrap_status (C._PyModuleAddStringConstant m name v)
+
+    let add_object m name obj =
+        wrap_status (C._PyModuleAddObject m name obj)
 
     let main () =
         get "__main__"

@@ -6,6 +6,11 @@ let pyobject : pyobject Ctypes.typ = ptr void
 
 exception Python_not_found
 
+let already_initialized =
+    match Sys.getenv_opt "OCAML_PY_NO_INIT" with
+    | None | Some "" | Some "false" -> false
+    | Some _ -> true
+
 type wchar_string = unit ptr
 let wchar_string : wchar_string typ = ptr void
 
@@ -24,7 +29,7 @@ let open_lib lib =
     with _ ->
         Dl.(dlopen ~filename:lib ~flags)
 
-let from =
+let from_lib () =
     try (* First see if the OCAML_PY_VERSION environment variable is set *)
         open_lib (Sys.getenv "OCAML_PY_VERSION")
     with _ -> try (* Next try to query the python3 executable *)
@@ -47,6 +52,11 @@ let from =
         let filename = "python3." ^ minor_s in
         open_lib filename
     with _ -> raise Python_not_found
+
+let from =
+    if already_initialized then
+        Dl.dlopen ?filename:None ~flags:Dl.[RTLD_NOW; RTLD_GLOBAL]
+    else from_lib ()
 
 let _Py_NoneStruct = foreign_value ~from "_Py_NoneStruct" void
 let _PyObject_RichCompareBool = foreign ~from "PyObject_RichCompareBool" (pyobject @-> pyobject @-> int @-> returning bool)
@@ -112,6 +122,9 @@ let _PyErr_Occurred = foreign ~from "PyErr_Occurred" (void @-> returning int)
 
 (* Module *)
 let _PyModule_GetDict = foreign ~from "PyModule_GetDict" (pyobject @-> returning pyobject)
+let _PyModuleAddIntConstant = foreign ~from "PyModule_AddIntConstant" (pyobject @-> string @-> int @-> returning int)
+let _PyModuleAddStringConstant = foreign ~from "PyModule_AddStringConstant" (pyobject @-> string @-> string @-> returning int)
+let _PyModuleAddObject = foreign ~from "PyModule_AddObject" (pyobject @-> string @-> pyobject @-> returning int)
 let _PyImport_AddModule = foreign ~from "PyImport_AddModule" (string @-> returning pyobject)
 let _PyImport_Import = foreign ~from "PyImport_Import" (pyobject @-> returning pyobject)
 let _PyImport_ReloadModule = foreign ~from "PyImport_ReloadModule" (pyobject @-> returning pyobject)

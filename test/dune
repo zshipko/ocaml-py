@@ -1,5 +1,6 @@
 (executable
     (name py_test)
+    (modules py_test test)
     (libraries py))
 
 (alias
@@ -7,3 +8,9 @@
     (package py)
     (deps py_test.exe)
     (action (run %{dep:py_test.exe})))
+
+(executable
+    (name ocaml_plugin)
+    (modules ocaml_plugin)
+    (libraries py)
+    (modes (native shared_object)))

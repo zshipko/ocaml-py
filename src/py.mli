@@ -214,6 +214,9 @@ val get_module_dict : unit -> Object.t
 
 module PyModule : sig
     val import : string -> Object.t
+    val add_int : Object.t -> string -> int -> unit
+    val add_string : Object.t -> string -> string -> unit
+    val add_object : Object.t -> string -> Object.t -> unit
     val set : string -> Object.t -> unit
     val get : string -> Object.t
     val get_dict : string -> Object.t
