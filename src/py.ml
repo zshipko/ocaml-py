@@ -700,8 +700,11 @@ let print ?kwargs args =
     run (eval "print") args ?kwargs
     |> ignore
 
+(* Avoid the GC collecting the struct as Python does not seem to copy them. *)
+let all_methods = ref []
 let c_function fn m ~name =
     let pymethod = allocate_n C._Py_method ~count:1 in
+    all_methods := pymethod :: !all_methods;
     setf !@ pymethod ml_name name;
     setf !@ pymethod ml_meth fn;
     setf !@ pymethod ml_flags 1;
@@ -861,8 +864,53 @@ module CamlModule = struct
 
     let add_fn t name fn =
         fns := fn :: !fns;
-        let fn _none args = fn args |> to_object in
+        let fn _none args =
+            try
+                fn args |> to_object
+            with
+            | exn ->
+                (* Set an ocaml related exception then return null. *)
+                _PyErr_SetString
+                    (!@_PyExc_RuntimeError)
+                    (Printf.sprintf "ocaml-error: %s" (Printexc.to_string exn));
+                null
+        in
         PyModule.add_object t name (c_function fn (Object.none ()) ~name)
+
+    (* Wrap ocaml values so that they can be passed through Python and
+       used by further OCaml code.
+       The values are stored in a capsule. In order to keep the GC happy, we don't
+       use a pointer but an identifier related to a hashtable where values are
+       stored.
+    *)
+    let delete_fns = ref []
+    let capsule_wrapper () =
+        let values = Hashtbl.create 100 in
+        let counter = ref 1 in
+        let id_from_capsule capsule =
+            _PyCapsule_GetPointer capsule (from_voidp char null)
+            |> raw_address_of_ptr |> Nativeint.to_int
+        in
+        let delete_id ptr = Hashtbl.remove values (id_from_capsule ptr) in
+        delete_fns := delete_id :: !delete_fns;
+        let encapsulate v =
+            let id = !counter in
+            counter := !counter + 1;
+            Hashtbl.add values id v;
+            _PyCapsule_New
+                (ptr_of_raw_address (Nativeint.of_int id))
+                (from_voidp char null)
+                delete_id
+            |> wrap
+        in
+        let decapsulate capsule =
+            let id = id_from_capsule capsule in
+            match Hashtbl.find_opt values id with
+            | None ->
+                Printf.sprintf "internal error: id %d cannot be found" id |> failwith
+            | Some v -> v
+        in
+        encapsulate, decapsulate
 end
 
 let () = initialize ()
