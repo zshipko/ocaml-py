@@ -10,7 +10,7 @@ tags: ["python"]
 
 depends:
 [
-  "ocaml" {>= "4.03.0"}
+  "ocaml" {>= "4.05.0"}
   "dune" {build}
   "ctypes" {>= "0.13.0"}
   "ctypes-foreign" {>= "0.4.0"}
