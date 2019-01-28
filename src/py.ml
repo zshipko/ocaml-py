@@ -18,7 +18,7 @@ type op =
 
 module C = Init
 
-let get_python_error () =
+let maybe_raise_python_error () =
     if C._PyErr_Occurred () <> 0 then
         let ptype, pvalue, ptraceback =
             allocate_n pyobject ~count:1 ,
@@ -28,20 +28,18 @@ let get_python_error () =
         let x = C._PyObject_Str !@pvalue in
         let res = C._PyUnicode_AsUTF8 x in
         C._Py_DecRef x;
-        Python_error (res)
-    else Invalid_object
+        C._PyErr_Clear ();
+        raise (Python_error res)
 
 let wrap x =
-    if x = null then
-        let err = get_python_error () in
-        let _ = C._PyErr_Clear () in raise err
+    if x = null then (
+        maybe_raise_python_error ();
+        raise Invalid_object)
     else Gc.finalise C._Py_DecRef x; x
 
 
 let wrap_status x =
-    if x = (-1) then
-        let err = get_python_error () in
-        let _ = C._PyErr_Clear () in raise err
+    if x = -1 then maybe_raise_python_error ()
     else ()
 
 
@@ -113,9 +111,8 @@ module PyBuffer = struct
 
     let create ?readonly:(readonly=true) obj =
         let b = allocate_n ~finalise:C._PyBuffer_Release C._Py_buffer ~count:1 in
-        if C._PyObject_GetBuffer obj b (if readonly then 0 else 1) = -1 then
-            raise (get_python_error ())
-        else {
+        wrap_status (C._PyObject_GetBuffer obj b (if readonly then 0 else 1));
+        {
             buf = b;
             data = CArray.from_ptr (getf !@b C.buf) (getf !@b C.len |> Int64.to_int);
         }
@@ -312,31 +309,39 @@ module Object = struct
     let incref = C._Py_IncRef
 
     let length obj =
-        C._PyObject_Length obj
+        let l = C._PyObject_Length obj in
+        if Int64.to_int l = -1 then maybe_raise_python_error ();
+        l
 
     (* Type conversions *)
 
     let to_string a =
-        let x = C._PyObject_Str a in
-        let res = C._PyUnicode_AsUTF8 x in
-        decref x; res
+        let x = wrap (C._PyObject_Str a) in
+        C._PyUnicode_AsUTF8 x
 
     let to_bytes a =
-        let x = C._PyObject_Bytes a in
-        let res = C._PyBytes_AsString x in
-        decref x; Bytes.of_string res
+        let x = wrap (C._PyObject_Bytes a) in
+        Bytes.of_string (C._PyBytes_AsString x)
 
     let to_int a =
-        C._PyLong_AsLong a
+        let i = C._PyLong_AsLong a in
+        maybe_raise_python_error ();
+        i
 
     let to_int64 a =
-        C._PyLong_AsLongLong a
+        let i = C._PyLong_AsLongLong a in
+        maybe_raise_python_error ();
+        i
 
     let to_float a =
-        C._PyFloat_AsDouble a
+        let f = C._PyFloat_AsDouble a in
+        maybe_raise_python_error ();
+        f
 
     let to_bool a =
-        C._PyObject_IsTrue a <> 0
+        let b = C._PyObject_IsTrue a <> 0 in
+        maybe_raise_python_error ();
+        b
 
     let from_bool b =
         wrap (C._PyBool_FromLong (if b then 1 else 0))
@@ -355,7 +360,7 @@ module Object = struct
         wrap (C._PyObject_GetItem obj k)
 
     let del_item obj k =
-        if C._PyObject_DelItem obj k = (-1) then raise (get_python_error ())
+        wrap_status (C._PyObject_DelItem obj k)
 
     let set_item obj k v =
         wrap_status (C._PyObject_SetItem obj k v)
@@ -428,10 +433,10 @@ module Object = struct
         in
         let ptr = C._PyCapsule_GetPointer t str_or_null in
         if ptr = null
-        then
-            let err = get_python_error () in
-            let () = C._PyErr_Clear () in
-            raise err
+        then (
+            maybe_raise_python_error ();
+            raise Invalid_object;
+        )
         else ptr
 
 

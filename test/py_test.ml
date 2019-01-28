@@ -122,6 +122,17 @@ let py_test_numpy t =
             (fun () -> (Bigarray.Genarray.get bigarray [| 1; 1 |] -. 3.14) < 1e-6) true
     )
 
+let py_test_errors t =
+    let v = Py.to_object (Int (-1)) |> Py.Object.to_int in
+    Test.check t "error can return -1" (fun () -> v) (-1);
+    let ok =
+        try
+            let _ = Py.to_object (String "aa") |> Py.Object.to_int in
+            false
+        with _ -> true
+    in
+    Test.check t "error string to int" (fun () -> ok) true
+
 let simple = [
     py_test_int;
     py_test_string;
@@ -134,6 +145,7 @@ let simple = [
     py_test_thread_state;
     py_test_gc;
     py_test_numpy;
+    py_test_errors;
 ]
 
 let _ =
