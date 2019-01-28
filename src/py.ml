@@ -6,13 +6,7 @@ exception Invalid_object
 exception Python_error of string
 exception End_iteration
 
-let initialized =
-  let initialized =
-    match Sys.getenv_opt "OCAML_PY_NO_INIT" with
-    | None | Some "" | Some "false" -> false
-    | Some _ -> true
-  in
-  ref initialized
+let initialized = ref already_initialized
 
 type op =
     | LT
