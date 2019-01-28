@@ -500,6 +500,9 @@ module PyModule = struct
         wrap_status (C._PyModuleAddStringConstant m name v)
 
     let add_object m name obj =
+        (* PyModule_AddObject steals the reference to obj so we first increase
+           the refcount. *)
+        Object.incref obj;
         wrap_status (C._PyModuleAddObject m name obj)
 
     let main () =
@@ -692,6 +695,15 @@ let print ?kwargs args =
     run (eval "print") args ?kwargs
     |> ignore
 
+let c_function fn m ~name =
+    let pymethod = allocate_n C._Py_method ~count:1 in
+    setf !@ pymethod ml_name name;
+    setf !@ pymethod ml_meth fn;
+    setf !@ pymethod ml_flags 1;
+    setf !@ pymethod ml_doc "doc";
+    let name = to_object (String name) in
+    wrap (_PyCFunction_New pymethod m name)
+
 module Numpy = struct
     (* Define some type aliases to match the numpy conventions. *)
     let npy_intp = intptr_t
@@ -825,6 +837,27 @@ module Numpy = struct
         *)
         Gc.finalise (fun _ -> ignore (Sys.opaque_identity bigarray)) pyobject;
         pyobject
+end
+
+(* A simple module to wrap OCaml code that can be run from Python. *)
+module CamlModule = struct
+    type pyvalue = t
+    type t = Object.t
+
+    let create name = PyModule.get name
+
+    let add_int = PyModule.add_int
+    let add_string = PyModule.add_string
+    let add_object t name o = PyModule.add_object t name (to_object o)
+
+    (* In order to avoid the closures being potentially collected by the OCaml GC
+       we store them in a global reference. *)
+    let fns = ref []
+
+    let add_fn t name fn =
+        fns := fn :: !fns;
+        let fn _none args = fn args |> to_object in
+        PyModule.add_object t name (c_function fn (Object.none ()) ~name)
 end
 
 let () = initialize ()

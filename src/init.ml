@@ -250,4 +250,17 @@ let _PyByteArray_Size = foreign ~from "PyByteArray_Size" (pyobject @-> returning
 let _PyByteArray_FromStringAndSize = foreign ~from "PyByteArray_FromStringAndSize" (ptr char @-> int64_t @-> returning pyobject)
 let _PySlice_New = foreign ~from "PySlice_New" (pyobject @-> pyobject @-> pyobject @-> returning pyobject)
 
+type _Py_method
+let _Py_method : _Py_method structure typ = structure "Py_method"
+let ml_name = field _Py_method "ml_name" string
+let ml_meth = field _Py_method "ml_meth" (Foreign.funptr (pyobject @-> pyobject @-> returning pyobject))
+let ml_flags = field _Py_method "ml_flag" int
+let ml_doc = field _Py_method "ml_doc" string
+let () = seal _Py_method
+
+let pymethod = ptr _Py_method
+
+let _PyCFunction_New =
+  foreign ~from "PyCFunction_NewEx" (pymethod @-> pyobject @-> pyobject @-> returning pyobject)
+
 let _PyCapsule_GetPointer = foreign ~from "PyCapsule_GetPointer" (pyobject @-> ptr char @-> returning (ptr void))
