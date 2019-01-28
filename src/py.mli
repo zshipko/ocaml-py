@@ -328,6 +328,12 @@ val pickle : ?kwargs:(t * t) list -> Object.t -> bytes
 val unpickle : ?kwargs:(t * t) list -> bytes -> Object.t
 val print : ?kwargs:(t * t) list -> t list -> unit
 
+(** [c_function fn obj ~name] returns a Python function. When this function
+    is called on some arguments [args], [fn obj args] is called.
+*)
+val c_function :
+    (Object.t -> Object.t -> Object.t) -> Object.t -> name:string -> Object.t
+
 module Numpy : sig
     val is_available : unit -> bool
     val shape : pyobject -> int list
@@ -348,6 +354,16 @@ module Numpy : sig
     *)
     val from_bigarray :
         ('a, 'b, Bigarray.c_layout) Bigarray.Genarray.t -> pyobject
+end
+
+module CamlModule : sig
+    type pyvalue = t
+    type t
+    val create : string -> t
+    val add_int : t -> string -> int -> unit
+    val add_string : t -> string -> string -> unit
+    val add_object : t -> string -> pyvalue -> unit
+    val add_fn : t -> string -> (Object.t -> pyvalue) -> unit
 end
 
 (*---------------------------------------------------------------------------
