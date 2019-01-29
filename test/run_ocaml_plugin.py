@@ -1,26 +1,44 @@
 # Run this from the github root directory via:
 #    dune build test/ocaml_plugin.so && python test/run_ocaml_plugin.py
+import atexit
 import ctypes
 import os
 
-os.environ['OCAML_PY_NO_INIT'] = 'true'
+ocaml_is_initialized = False
 
-print('Importing the ocaml library.')
-dll = ctypes.PyDLL('_build/default/test/ocaml_plugin.so', ctypes.RTLD_GLOBAL)
+def start_ocaml():
+  global ocaml_is_initialized
+  if ocaml_is_initialized: return
+  os.environ['OCAML_PY_NO_INIT'] = 'true'
+  dll = ctypes.PyDLL('_build/default/test/ocaml_plugin.so', ctypes.RTLD_GLOBAL)
+  argc = ctypes.c_int(2)
+  myargv = ctypes.c_char_p * 2
+  argv = myargv()
+  dll.caml_startup(argv)
+  ocaml_is_initialized = True
 
-print('Starting the ocaml runtime.')
-argc = ctypes.c_int(2)
-myargv = ctypes.c_char_p * 2
-argv = myargv()
-dll.caml_startup(argv)
+  def finalize():
+    dll.caml_shutdown()
+  atexit.register(finalize)
 
-print('Importing the ocaml module.');
+start_ocaml()
+
 import testmod
 
-print('Module imported has been imported.')
 print(testmod.foobar)
 print(testmod.pi)
 print(testmod.e)
+for i in range(1, 10):
+  print(testmod.fn(i))
 
-print('All good, shutting down the ocaml runtime.')
-dll.caml_shutdown()
+# OCaml errors should be nicely wrapped in Python.
+try:
+  testmod.fn(0)
+except Exception as e:
+  print('ocaml failed: ' + str(e))
+
+capsule = testmod.build()
+testmod.increment(capsule)
+testmod.increment(capsule)
+testmod.increment(capsule)
+print(testmod.get(capsule))

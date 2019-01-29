@@ -119,6 +119,8 @@ let _PyRun_StringFlags = foreign ~from "PyRun_StringFlags" (string @-> int @-> p
 let _PyErr_Clear = foreign ~from "PyErr_Clear" (void @-> returning void)
 let _PyErr_Fetch = foreign ~from "PyErr_Fetch" (ptr pyobject @-> ptr pyobject @-> ptr pyobject @-> returning int)
 let _PyErr_Occurred = foreign ~from "PyErr_Occurred" (void @-> returning int)
+let _PyErr_SetString = foreign ~from "PyErr_SetString" (pyobject @-> string @-> returning void)
+let _PyExc_RuntimeError = foreign_value ~from "PyExc_RuntimeError" pyobject
 
 (* Module *)
 let _PyModule_GetDict = foreign ~from "PyModule_GetDict" (pyobject @-> returning pyobject)
@@ -249,5 +251,22 @@ let _PyByteArray_AsString = foreign ~from "PyByteArray_AsString" (pyobject @-> r
 let _PyByteArray_Size = foreign ~from "PyByteArray_Size" (pyobject @-> returning int64_t)
 let _PyByteArray_FromStringAndSize = foreign ~from "PyByteArray_FromStringAndSize" (ptr char @-> int64_t @-> returning pyobject)
 let _PySlice_New = foreign ~from "PySlice_New" (pyobject @-> pyobject @-> pyobject @-> returning pyobject)
+
+type _Py_method
+let _Py_method : _Py_method structure typ = structure "Py_method"
+let ml_name = field _Py_method "ml_name" string
+let ml_meth = field _Py_method "ml_meth" (Foreign.funptr (pyobject @-> pyobject @-> returning pyobject))
+let ml_flags = field _Py_method "ml_flag" int
+let ml_doc = field _Py_method "ml_doc" string
+let () = seal _Py_method
+
+let pymethod = ptr _Py_method
+
+let _PyCFunction_New =
+  foreign ~from "PyCFunction_NewEx" (pymethod @-> pyobject @-> pyobject @-> returning pyobject)
+
+let _PyCapsule_New =
+  foreign ~from "PyCapsule_New" (ptr void @-> ptr char @->
+    (Foreign.funptr (pyobject @-> returning void)) @-> returning pyobject)
 
 let _PyCapsule_GetPointer = foreign ~from "PyCapsule_GetPointer" (pyobject @-> ptr char @-> returning (ptr void))
