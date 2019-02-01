@@ -14,29 +14,41 @@ let already_initialized =
 type wchar_string = unit ptr
 let wchar_string : wchar_string typ = ptr void
 
+let is_darwin =
+  try
+    let ic = Unix.open_process_in "uname" in
+    let uname = input_line ic in
+    let () = close_in ic in
+    uname = "Darwin"
+  with _ -> false
+
+let ext = if is_darwin then "dylib" else "so"
+
 let open_lib lib =
     let flags = Dl.[RTLD_NOW; RTLD_GLOBAL] in
     try
-        Dl.(dlopen ~filename:("lib" ^ lib ^ ".so") ~flags)
+        Dl.(dlopen ~filename:("lib" ^ lib ^ "." ^ ext) ~flags)
     with _ -> try
-        Dl.(dlopen ~filename:("lib" ^ lib ^ ".dylib") ~flags)
-    with _ -> try
-        Dl.(dlopen ~filename:("lib" ^ lib ^ "m.so") ~flags)
-    with _ -> try
-        Dl.(dlopen ~filename:("lib" ^ lib ^ "m.dylib") ~flags)
+        Dl.(dlopen ~filename:("lib" ^ lib ^ "m." ^ ext) ~flags)
     with _ -> try
         Dl.(dlopen ~filename:("lib" ^ lib) ~flags)
     with _ ->
         Dl.(dlopen ~filename:lib ~flags)
 
+
+let find_lib () =
+    let s = Printf.sprintf "python3 -c 'import sys, os, glob; print(glob.glob(os.path.join(sys.prefix, \"lib\",\"libpython*.%s*\"))[0])' 2> /dev/null" ext in
+    let proc = Unix.open_process_in s in
+    let line = input_line proc in
+    let _ = close_in proc in
+    open_lib line
+
+
 let from_lib () =
     try (* First see if the OCAML_PY_VERSION environment variable is set *)
         open_lib (Sys.getenv "OCAML_PY_VERSION")
     with _ -> try (* Next try to query the python3 executable *)
-        let proc = Unix.open_process_in "python3 -c 'import sys, os, glob; print(glob.glob(os.path.join(sys.prefix, \"lib\",\"libpython*.so*\"))[0])' 2> /dev/null" in
-        let line = input_line proc in
-        let _ = close_in proc in
-        open_lib line
+        find_lib ()
     with _ -> try (* Then try some common versions out of desperation *)
         open_lib "python3.5"
     with _ -> try
