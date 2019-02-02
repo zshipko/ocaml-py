@@ -68,6 +68,48 @@ let py_test_buffer t =
     let _ = PyBuffer.set c 1 'y' in
     Test.check t "Python check byte array" (fun () -> PyByteArray.get_string b) "zycdefg"
 
+let py_test_wrap t =
+    let sum_fn = Object.get_item_s (builtins ()) "sum" in
+    let sum = PyWrap.(python_fn (list int @-> returning int) sum_fn) in
+    let v = sum [1; 2; 3; 4], sum [1; 2; 3; 4; 5; 6] in
+    Test.check t "Wrap python fn" (fun () -> v) (10, 21);
+
+    (* Python runtime errors are converted to ocaml exceptions. *)
+    let sum = PyWrap.(python_fn (list string @-> returning int) sum_fn) in
+    let failed_at_runtime =
+      try
+        let _v = sum ["ab"; "cd"] in
+        false
+      with _ -> true
+    in
+    Test.check t "Wrap python fn exn 1" (fun () -> failed_at_runtime) true;
+
+    (* Wrapping with an incorrect type will result in a runtime error. *)
+    let sum = PyWrap.(python_fn (list int @-> returning (tuple2 int int)) sum_fn) in
+    let failed_at_runtime =
+      try
+        let _v = sum [0; 1] in
+        false
+      with _ -> true
+    in
+    Test.check t "Wrap python fn exn 2" (fun () -> failed_at_runtime) true;
+
+    let sum_pow l k =
+      List.fold_left (fun acc x -> acc +. x ** (float k)) 0. l
+    in
+    let sum_pow = PyWrap.(ocaml_fn (list float @-> int @-> returning float) sum_pow) in
+    (* For this test we call sum_pow from ocaml directly, it would be interesting
+       to add this function to a module and call it python. *)
+    let v =
+      let rec loop acc v =
+        if v = 0 then acc else loop (Int v :: acc) (v - 1)
+      in
+      let args = to_object (Tuple [| List (loop [] 100); Int (-2) |]) in
+      sum_pow args
+      |> Object.to_float
+    in
+    Test.check t "Wrap ocaml fn" (fun () -> int_of_float (1e6 *. v)) 1634983
+
 let py_test_thread_state t =
     let a0 = PyThreadState.get () in
     let _ = exec "a = 10" in
@@ -142,6 +184,7 @@ let simple = [
     py_test_getitem_dict;
     py_test_iter;
     py_test_buffer;
+    py_test_wrap;
     py_test_thread_state;
     py_test_gc;
     py_test_numpy;
