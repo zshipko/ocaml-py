@@ -425,7 +425,19 @@ module Object = struct
     let concat a b =
         wrap (C._PySequence_Concat a b)
 
-    let to_c_pointer t str_option =
+    let pp formatter t =
+        let str =
+            if is_null t then "PyNull"
+            else try to_string t with _ -> "PyOpaque"
+        in
+        Format.open_box 0;
+        Format.fprintf formatter "%s" str;
+        Format.close_box ()
+
+    let to_c_ptr x = x
+    let of_c_ptr x = x
+
+    let capsule_c_pointer t str_option =
         let str_or_null =
             match str_option with
             | Some str -> CArray.of_string str |> CArray.start
@@ -740,7 +752,7 @@ module Numpy = struct
         let np_api =
             np $. String "core" $. String "multiarray" $. String "_ARRAY_API"
         in
-        let np_api = Object.to_c_pointer np_api None in
+        let np_api = Object.capsule_c_pointer np_api None in
         (* See [numpy/__multiarray_api.h] for the offset values. *)
         let ptr_offset ~offset = to_voidp (from_voidp (ptr void) np_api +@ offset) in
         let fn fn_typ ~offset =

@@ -10,7 +10,7 @@
 
 (** {1 Py} *)
 
-type pyobject = unit Ctypes.ptr
+type pyobject
 val pyobject : pyobject Ctypes.typ
 
 (** The op type is used in calls to Object.compare *)
@@ -123,8 +123,14 @@ module Object : sig
     (** Call a Python Object *)
     val call : ?args:t -> ?kwargs:t -> t -> t
 
+    (** Top-level pretty printer. *)
+    val pp : Format.formatter -> t -> unit [@@ocaml.toplevel_printer]
+
+    val to_c_ptr : pyobject -> unit Ctypes.ptr
+    val of_c_ptr : unit Ctypes.ptr -> pyobject
+
     (** Extract the C pointer from a capsule *)
-    val to_c_pointer : t -> string option -> unit Ctypes.ptr
+    val capsule_c_pointer : t -> string option -> unit Ctypes.ptr
 end
 
 val wrap : pyobject -> Object.t
