@@ -90,6 +90,8 @@ let _PyObject_GetItem = foreign ~from "PyObject_GetItem" (pyobject @-> pyobject 
 let _PyObject_DelItem = foreign ~from "PyObject_DelItem" (pyobject @-> pyobject @-> returning int)
 let _PyObject_SetItem = foreign ~from "PyObject_SetItem" (pyobject @-> pyobject @-> pyobject @-> returning int)
 let _PyObject_GetAttr = foreign ~from "PyObject_GenericGetAttr" (pyobject @-> pyobject @-> returning pyobject)
+let _PyObject_GetAttrString =
+    foreign ~from "PyObject_GetAttrString" (pyobject @-> string @-> returning pyobject)
 let _PyObject_SetAttr = foreign ~from "PyObject_GenericSetAttr" (pyobject @-> pyobject @-> pyobject @-> returning int)
 let _PyObject_HasAttr = foreign ~from "PyObject_HasAttr" (pyobject @-> pyobject @-> returning bool)
 

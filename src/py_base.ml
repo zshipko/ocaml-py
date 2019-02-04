@@ -387,7 +387,7 @@ module Object = struct
         wrap_status (C._PyObject_SetItem obj (PyUnicode.create k) v)
 
     let get_attr_s obj k =
-        wrap (C._PyObject_GetAttr obj (PyUnicode.create k))
+        wrap (C._PyObject_GetAttrString obj k)
 
     let set_attr_s obj k v =
         wrap_status (C._PyObject_SetAttr obj (PyUnicode.create k) v)
@@ -451,20 +451,27 @@ module Object = struct
         )
         else ptr
 
-
-    (** Call a Python Object *)
-    let call ?args:(args=PyTuple.create [||]) ?kwargs fn =
-        let kw = match kwargs with
-        | Some k -> k
-        | None -> null in
-        wrap (C._PyObject_Call fn args kw)
-end
-
-module PyDict = struct
-    let create l =
+    let pydict_create l =
         let d = C._PyDict_New () in
         List.iter (fun (k, v) ->
             wrap_status (C._PyObject_SetItem d k v)) l; wrap d
+
+    (** Call a Python Object *)
+    let call ?args:(args=[||]) ?kwargs fn =
+        let kw = match kwargs with
+        | Some k -> pydict_create k
+        | None -> null in
+        (* PyObject_Call segfaults on Python 3.7 when args is not a tuple
+           rather than setting a proper error, so we enforce that this always
+           uses a tuple. *)
+        wrap (C._PyObject_Call fn (PyTuple.create args) kw)
+
+    let call_method ?args ?kwargs t method_name =
+        call (get_attr_s t method_name) ?args ?kwargs
+end
+
+module PyDict = struct
+    let create = Object.pydict_create
 
     let contains d k =
         C._PyDict_Contains d k = 1
@@ -679,7 +686,9 @@ let eval ?globals ?locals s =
 let ( !$ ) obj = to_object obj
 
 let run fn ?kwargs:(kwargs=[]) args =
-    Object.call ~args:!$(Tuple (Array.of_list args)) ~kwargs:!$(Dict kwargs) fn
+    Object.call fn
+      ~args:(List.map to_object args |> Array.of_list)
+      ~kwargs:(List.map (fun (key, value) -> !$ key, !$ value) kwargs)
 
 let ( $ ) fn args = run fn args
 let ( $. ) obj attr = Object.get_attr obj (!$attr)

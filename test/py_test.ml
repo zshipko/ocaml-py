@@ -59,6 +59,21 @@ let py_test_iter t =
     let _ = Test.check t "Python check iter 3" (fun () -> Object.to_int o) 3 in
     Test.check_raise t "Python check iter end" (fun () -> PyIter.next i)
 
+let py_test_call t =
+    let python_list = PyList.create [] in
+    let result =
+        Object.call_method python_list "append" ~args:[| to_object (Int 42) |]
+    in
+    assert Object.(is_none result);
+    let result =
+        Object.call_method python_list "append" ~args:[| to_object (String "foo") |]
+    in
+    assert Object.(is_none result);
+    let len =
+        Object.(call (get_item_s (builtins ()) "len") ~args:[| python_list |])
+        |> Object.to_int
+    in
+    Test.check t "Python check call" (fun () -> len) 2
 
 let py_test_buffer t =
     let a = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'] in
@@ -183,6 +198,7 @@ let simple = [
     py_test_dict;
     py_test_getitem_dict;
     py_test_iter;
+    py_test_call;
     py_test_buffer;
     py_test_wrap;
     py_test_thread_state;
