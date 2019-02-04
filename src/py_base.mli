@@ -121,7 +121,10 @@ module Object : sig
     val concat : t -> t -> t
 
     (** Call a Python Object *)
-    val call : ?args:t -> ?kwargs:t -> t -> t
+    val call : ?args:t array -> ?kwargs:(t * t) list -> t -> t
+
+    (** Call a method on Python Object *)
+    val call_method : ?args:t array -> ?kwargs:(t * t) list -> t -> string -> t
 
     (** Top-level pretty printer. *)
     val pp : Format.formatter -> t -> unit [@@ocaml.toplevel_printer]
