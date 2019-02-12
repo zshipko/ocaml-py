@@ -44,6 +44,28 @@ let py_test_getitem_dict t =
     Test.check t "Getitem a" (fun () -> Object.get_item_s d "a" |> Object.to_int) 1;
     Test.check t "Getitem b" (fun () -> Object.get_item d (PyUnicode.create "b") |> Object.to_int) 3
 
+let py_test_type t =
+    List.iter
+        (fun (name, py, expected_type) ->
+            let pyobject = !$ py in
+            let type_name =
+              match PyType.type_name pyobject with
+              | None -> assert false
+              | Some type_name -> type_name
+            in
+            Test.check t ("Type " ^ name) (fun () -> type_name) name;
+            Test.check t ("Type " ^ name) (fun () -> PyType.get pyobject) expected_type)
+        [
+            "str", String "foobar", [Unicode];
+            "int", Int 42, [Long];
+            "dict", Dict [String "key", Int 42], [Dict];
+            "tuple", Tuple [|String "alpha"; Int 42|], [Tuple];
+            "list", List [String "alpha"; Int 42], [List];
+            "float", Float 3.14159265359, [Float];
+            "NoneType", Nil, [None];
+        ]
+
+
 let py_test_iter t =
     let l = !$(List [
         Int 1;
@@ -197,6 +219,7 @@ let simple = [
     py_test_tuple;
     py_test_dict;
     py_test_getitem_dict;
+    py_test_type;
     py_test_iter;
     py_test_call;
     py_test_buffer;

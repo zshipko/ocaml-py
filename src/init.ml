@@ -284,3 +284,40 @@ let _PyCapsule_New =
     (Foreign.funptr (pyobject @-> returning void)) @-> returning pyobject)
 
 let _PyCapsule_GetPointer = foreign ~from "PyCapsule_GetPointer" (pyobject @-> ptr char @-> returning (ptr void))
+
+(* See https://docs.python.org/3/c-api/typeobj.html for details on the C implementation. *)
+type _Py_type_object
+let _Py_type_object : _Py_type_object structure typ = structure "Py_type_object"
+let tp_refcnt = field _Py_type_object "ob_refcnt" PosixTypes.ssize_t
+let tp_type = field _Py_type_object "ob_type" (ptr _Py_type_object)
+let tp_size = field _Py_type_object "ob_size" PosixTypes.ssize_t
+let tp_name = field _Py_type_object "tp_name" string
+let tp_basicsize = field _Py_type_object "tp_basicsize" PosixTypes.ssize_t
+let tp_itemsize = field _Py_type_object "tp_itemsize" PosixTypes.ssize_t
+(* Method pointers, we don't use these so they are represented with [ptr void] *)
+let tp_dealloc = field _Py_type_object "tp_dealloc" (ptr void)
+let tp_print = field _Py_type_object "tp_print" (ptr void)
+let tp_getattr = field _Py_type_object "tp_getattr" (ptr void)
+let tp_setattr = field _Py_type_object "tp_setattr" (ptr void)
+let tp_as_async = field _Py_type_object "tp_as_async" (ptr void)
+let tp_repr = field _Py_type_object "tp_repr" (ptr void)
+let tp_as_number = field _Py_type_object "tp_as_number" (ptr void)
+let tp_as_sequence = field _Py_type_object "tp_as_sequence" (ptr void)
+let tp_as_mapping = field _Py_type_object "tp_as_mapping" (ptr void)
+let tp_hash = field _Py_type_object "tp_hash" (ptr void)
+let tp_call = field _Py_type_object "tp_call" (ptr void)
+let tp_str = field _Py_type_object "tp_str" (ptr void)
+let tp_getattro = field _Py_type_object "tp_getattro" (ptr void)
+let tp_setattro = field _Py_type_object "tp_setattro" (ptr void)
+let tp_as_buffer = field _Py_type_object "tp_as_buffer" (ptr void)
+let tp_flags = field _Py_type_object "tp_flags" ulong
+let tp_doc = field _Py_type_object "tp_doc" string
+let () = seal _Py_type_object
+
+type _Py_object
+let _Py_object : _Py_object structure typ = structure "Py_object"
+let ob_refcnt = field _Py_object "ob_refcnt" PosixTypes.ssize_t
+let ob_type = field _Py_object "ob_type" (ptr _Py_type_object)
+let () = seal _Py_object
+
+let _PyFloat_Type = foreign_value ~from "PyFloat_Type" _Py_type_object
