@@ -23,3 +23,4 @@ val base_exc_subclass : Py_base.pyobject -> bool
 val type_subclass : Py_base.pyobject -> bool
 
 val is_float : Py_base.pyobject -> bool
+val type_name : Py_base.pyobject -> string option

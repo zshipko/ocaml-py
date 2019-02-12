@@ -47,8 +47,14 @@ let py_test_getitem_dict t =
 let py_test_type t =
     List.iter
         (fun (name, py, expected_type) ->
-            let type_ = PyType.get (!$ py) in
-            Test.check t ("Type " ^ name) (fun () -> type_) expected_type)
+            let pyobject = !$ py in
+            let type_name =
+              match PyType.type_name pyobject with
+              | None -> assert false
+              | Some type_name -> type_name
+            in
+            Test.check t ("Type " ^ name) (fun () -> type_name) name;
+            Test.check t ("Type " ^ name) (fun () -> PyType.get pyobject) expected_type)
         [
             "str", String "foobar", [Unicode];
             "int", Int 42, [Long];
@@ -56,7 +62,7 @@ let py_test_type t =
             "tuple", Tuple [|String "alpha"; Int 42|], [Tuple];
             "list", List [String "alpha"; Int 42], [List];
             "float", Float 3.14159265359, [Float];
-            "none", Nil, [None];
+            "NoneType", Nil, [None];
         ]
 
 

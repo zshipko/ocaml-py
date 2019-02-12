@@ -1,5 +1,15 @@
 module P = Py_base
 
+let type_name obj =
+  let ptr = P.Object.to_c_ptr obj |> Ctypes.from_voidp Init._Py_object in
+  if Ctypes.is_null ptr
+  then None
+  else
+    let ob_type = Ctypes.getf (Ctypes.(!@) ptr) Init.ob_type in
+    if Ctypes.is_null ob_type
+    then None
+    else Some (Ctypes.getf (Ctypes.(!@) ob_type) Init.tp_name)
+
 let tp_flags obj =
   let ptr = P.Object.to_c_ptr obj |> Ctypes.from_voidp Init._Py_object in
   if Ctypes.is_null ptr
