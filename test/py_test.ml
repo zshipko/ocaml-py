@@ -65,6 +65,18 @@ let py_test_type t =
             "NoneType", Nil, [None];
         ]
 
+let py_test_of_object t =
+    List.iteri
+        (fun i py ->
+            let py' = !$ py |> of_object in
+            Test.check t ("of_object " ^ string_of_int i) (fun () -> py) py')
+        [
+            String "foobar";
+            Int 42;
+            Dict [String "key", Int 42; Int 1337, Float 3.1415];
+            List [Tuple [|Int 2; Int 7; Int 1; Float 828.|]; String "test"; Nil];
+        ]
+
 
 let py_test_iter t =
     let l = !$(List [
@@ -220,6 +232,7 @@ let simple = [
     py_test_dict;
     py_test_getitem_dict;
     py_test_type;
+    py_test_of_object;
     py_test_iter;
     py_test_call;
     py_test_buffer;
