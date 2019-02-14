@@ -88,3 +88,15 @@ let get obj =
     |> maybe_add Dict ~flag_id:29
     |> maybe_add Base_exc ~flag_id:30
     |> maybe_add Type ~flag_id:31
+
+let rec of_object obj : P.t =
+  match get obj with
+  | [ Null ] | [ None ] -> Nil
+  | [ Float ] -> Float (P.Object.to_float obj)
+  | [ Long ] -> Int (P.Object.to_int obj)
+  | [ List ] -> List (P.Object.to_list of_object obj)
+  | [ Tuple ] -> Tuple (P.Object.to_array of_object obj)
+  | [ Bytes ] -> Bytes (P.Object.to_bytes obj)
+  | [ Unicode ] -> String (P.Object.to_string obj)
+  | [ Dict ] -> Dict (P.PyDict.items of_object of_object obj)
+  | _ -> Ptr obj
