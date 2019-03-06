@@ -65,11 +65,21 @@ let py_test_type t =
             "NoneType", Nil, [None];
         ]
 
+let sort_keys = function
+  | Dict l ->
+      Dict (List.sort (fun (k, _) (k', _) ->
+        match (k, k') with
+        | String a, String b -> String.compare a b
+        | Int a, String b -> String.compare (string_of_int a) b
+        | String a, Int b -> String.compare a (string_of_int b)
+        | _, _ -> -1) l)
+  | x -> x
+
 let py_test_of_object t =
     List.iteri
         (fun i py ->
             let py' = !$ py |> of_object in
-            Test.check t ("of_object " ^ string_of_int i) (fun () -> py) py')
+            Test.check t ("of_object " ^ string_of_int i) (fun () -> sort_keys py) (sort_keys py'))
         [
             String "foobar";
             Int 42;
