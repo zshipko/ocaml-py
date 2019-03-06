@@ -1,3 +1,9 @@
+v1.2 2019-03
+---------------
+
+- Conversion from `pyobject` to `Py.t` (@LaurentMazare)
+- More access to type information for Python objects (@LaurentMazare)
+
 v1.1 2019-01
 ---------------
 
