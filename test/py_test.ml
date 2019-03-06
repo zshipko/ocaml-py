@@ -73,7 +73,7 @@ let py_test_of_object t =
         [
             String "foobar";
             Int 42;
-            Dict [String "key", Int 42; Int 1337, Float 3.1415];
+            Dict [Int 1337, Float 3.1415; String "key", Int 42];
             List [Tuple [|Int 2; Int 7; Int 1; Float 828.|]; String "test"; Nil];
         ]
 
