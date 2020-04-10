@@ -27,4 +27,4 @@ post-messages: [
     "Py requires Python 3.5 or greater"
 ]
 
-synopsis: "Ctypes bindings to Python 3.5 or greater"
+description: "Ctypes bindings to Python 3.5 or greater"
