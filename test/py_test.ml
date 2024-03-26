@@ -220,6 +220,18 @@ let py_test_numpy t =
         Test.check t "bigarray to numpy 2" (fun () -> Object.to_float sum) 26.;
         let _ = na $. String "fill" $ [ Float 3.14 ] in
         Test.check t "bigarray to numpy 3"
+            (fun () -> (Bigarray.Genarray.get bigarray [| 1; 1 |] -. 3.14) < 1e-6) true;
+
+        let _bigarray =
+            Bigarray.Array2.of_array Float16 C_layout
+                [| [| 3.; 1.; 4.; 1. |]; [| 1.; 5.; 9.; 2. |] |]
+            |> Bigarray.genarray_of_array2
+        in
+        let _na = Numpy.from_bigarray bigarray in
+        Test.check t "bigarray to numpy" (fun () -> Numpy.shape na)
+            (Bigarray.Genarray.dims bigarray |> Array.to_list);
+        let _ = na $. String "fill" $ [ Float 3.14 ] in
+        Test.check t "bigarray to numpy 3"
             (fun () -> (Bigarray.Genarray.get bigarray [| 1; 1 |] -. 3.14) < 1e-6) true
     )
 

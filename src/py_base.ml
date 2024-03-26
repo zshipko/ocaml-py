@@ -809,6 +809,7 @@ module Numpy = struct
             match kind, typeinfo with
             | Bigarray.Float32, 11 -> float
             | Bigarray.Float64, 12 -> float
+            | Bigarray.Float16, 23 -> float
             | Bigarray.Int8_signed, 1 -> int
             | Bigarray.Int8_unsigned, 2 -> int
             | Bigarray.Int16_signed, 3 -> int
@@ -848,6 +849,7 @@ module Numpy = struct
             | Bigarray.Int16_unsigned -> 4
             | Bigarray.Int32          -> 5
             | Bigarray.Int64          -> 9
+            | Bigarray.Float16        -> 23
             | Bigarray.Int            -> failwith "int is not supported"
             | Bigarray.Nativeint      -> failwith "native int is not supported"
             | Bigarray.Complex32      -> failwith "complex32 is not supported"
